@@ -7,7 +7,7 @@ import Navbar from '@/components/Navbar'
 
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null)
-  const [isAdmin, setIsAdmin] = useState(false)
+  const [userRole, setUserRole] = useState<string>('client')
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
@@ -22,14 +22,14 @@ export default function Dashboard() {
     } else {
       setUser(user)
 
-      // Vérifier si l'utilisateur est admin dans la table admins
-      const { data: adminData } = await supabase
-        .from('admins')
-        .select('is_admin')
+      // Récupérer le rôle de l'utilisateur depuis user_roles
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
         .eq('user_id', user.id)
         .single()
 
-      setIsAdmin(adminData?.is_admin || false)
+      setUserRole(roleData?.role || 'client')
     }
     setLoading(false)
   }
@@ -55,8 +55,8 @@ export default function Dashboard() {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                Bienvenue {user?.user_metadata?.first_name || 'utilisateur'}
-                {isAdmin && <span className="text-orange-600"> (Admin)</span>}
+                Bienvenue {user?.user_metadata?.first_name || 'utilisateur'}{' '}
+                <span className="text-orange-600">({userRole})</span>
               </h1>
               <p className="text-gray-600">{user?.email}</p>
             </div>
