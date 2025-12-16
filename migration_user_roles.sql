@@ -41,9 +41,14 @@ END $$;
 -- 5. Activer RLS sur la nouvelle table
 ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
 
--- 6. Supprimer les anciennes policies si elles existent
-DROP POLICY IF EXISTS "Anyone can read admins" ON public.admins;
-DROP POLICY IF EXISTS "Only admins can update admins" ON public.admins;
+-- 6. Supprimer les anciennes policies si elles existent (seulement si la table admins existe)
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'admins') THEN
+    DROP POLICY IF EXISTS "Anyone can read admins" ON public.admins;
+    DROP POLICY IF EXISTS "Only admins can update admins" ON public.admins;
+  END IF;
+END $$;
 
 -- 7. Créer les nouvelles policies
 DROP POLICY IF EXISTS "Users can read their own role" ON public.user_roles;
@@ -79,11 +84,7 @@ CREATE POLICY "Only admins can manage admin status"
     )
   );
 
--- 8. Supprimer l'ancien trigger
-DROP TRIGGER IF EXISTS on_auth_user_created_admin ON auth.users;
-DROP FUNCTION IF EXISTS public.handle_new_user_admin();
-
--- 9. SUPPRIMER les anciens triggers
+-- 8. SUPPRIMER les anciens triggers
 DROP TRIGGER IF EXISTS on_auth_user_created_role ON auth.users;
 DROP TRIGGER IF EXISTS on_auth_user_created_admin ON auth.users;
 DROP FUNCTION IF EXISTS public.handle_new_user_role();
