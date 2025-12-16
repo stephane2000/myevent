@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ['@supabase/supabase-js'],
+  transpilePackages: ['@supabase/ssr', '@supabase/supabase-js'],
 }
 
 module.exports = nextConfig
