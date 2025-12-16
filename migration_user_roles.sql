@@ -1,10 +1,14 @@
--- Script SQL pour créer la table user_roles
+-- Script de migration de la table admins vers user_roles
 -- À exécuter dans Supabase Dashboard > SQL Editor
 
--- Créer un type ENUM pour les rôles d'utilisateur
-CREATE TYPE user_role_type AS ENUM ('client', 'prestataire', 'admin');
+-- 1. Créer le type ENUM s'il n'existe pas déjà
+DO $$ BEGIN
+  CREATE TYPE user_role_type AS ENUM ('client', 'prestataire', 'admin');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
--- Créer la table user_roles
+-- 2. Créer la nouvelle table user_roles
 CREATE TABLE IF NOT EXISTS public.user_roles (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -15,16 +19,35 @@ CREATE TABLE IF NOT EXISTS public.user_roles (
   UNIQUE(user_id)
 );
 
--- Activer Row Level Security (RLS)
+-- 3. Migrer les données existantes de admins vers user_roles
+INSERT INTO public.user_roles (user_id, role, is_admin, created_at, updated_at)
+SELECT 
+  user_id, 
+  CASE 
+    WHEN is_admin = true THEN 'admin'::user_role_type
+    ELSE 'client'::user_role_type
+  END as role,
+  is_admin,
+  created_at,
+  updated_at
+FROM public.admins
+ON CONFLICT (user_id) DO NOTHING;
+
+-- 4. Activer RLS sur la nouvelle table
 ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
 
--- Policy : Les utilisateurs peuvent lire leur propre rôle
+-- 5. Supprimer les anciennes policies de la table admins si elles existent
+DROP POLICY IF EXISTS "Anyone can read admins" ON public.admins;
+DROP POLICY IF EXISTS "Only admins can update admins" ON public.admins;
+
+-- 6. Créer les nouvelles policies
+DROP POLICY IF EXISTS "Users can read their own role" ON public.user_roles;
 CREATE POLICY "Users can read their own role"
   ON public.user_roles
   FOR SELECT
   USING (auth.uid() = user_id);
 
--- Policy : Les utilisateurs peuvent mettre à jour leur propre rôle (client/prestataire uniquement)
+DROP POLICY IF EXISTS "Users can update their own role" ON public.user_roles;
 CREATE POLICY "Users can update their own role"
   ON public.user_roles
   FOR UPDATE
@@ -35,7 +58,7 @@ CREATE POLICY "Users can update their own role"
     AND is_admin = false
   );
 
--- Policy : Seuls les admins peuvent modifier is_admin et tous les rôles
+DROP POLICY IF EXISTS "Only admins can manage admin status" ON public.user_roles;
 CREATE POLICY "Only admins can manage admin status"
   ON public.user_roles
   FOR ALL
@@ -45,8 +68,11 @@ CREATE POLICY "Only admins can manage admin status"
     )
   );
 
--- Créer un trigger pour ajouter automatiquement une entrée dans user_roles lors de l'inscription
--- Note: Le rôle sera défini à 'client' par défaut, mais sera mis à jour lors de la finalisation de l'inscription
+-- 7. Supprimer l'ancien trigger
+DROP TRIGGER IF EXISTS on_auth_user_created_admin ON auth.users;
+DROP FUNCTION IF EXISTS public.handle_new_user_admin();
+
+-- 8. Créer le nouveau trigger
 CREATE OR REPLACE FUNCTION public.handle_new_user_role()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -56,21 +82,18 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Supprimer le trigger s'il existe déjà
 DROP TRIGGER IF EXISTS on_auth_user_created_role ON auth.users;
-
--- Créer le trigger
 CREATE TRIGGER on_auth_user_created_role
   AFTER INSERT ON auth.users
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_new_user_role();
 
--- Index pour améliorer les performances
+-- 9. Créer les index
 CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON public.user_roles(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_roles_role ON public.user_roles(role);
 CREATE INDEX IF NOT EXISTS idx_user_roles_is_admin ON public.user_roles(is_admin);
 
--- Fonction utile pour vérifier si un utilisateur est admin
+-- 10. Créer les fonctions utilitaires
 CREATE OR REPLACE FUNCTION public.is_user_admin(check_user_id uuid)
 RETURNS boolean AS $$
 BEGIN
@@ -81,7 +104,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Fonction pour obtenir le rôle d'un utilisateur
 CREATE OR REPLACE FUNCTION public.get_user_role(check_user_id uuid)
 RETURNS user_role_type AS $$
 DECLARE
@@ -94,7 +116,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Fonction pour vérifier si un utilisateur est prestataire
 CREATE OR REPLACE FUNCTION public.is_user_prestataire(check_user_id uuid)
 RETURNS boolean AS $$
 BEGIN
@@ -104,3 +125,16 @@ BEGIN
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 11. (OPTIONNEL) Supprimer l'ancienne table admins après vérification
+-- ATTENTION : Décommenter uniquement après avoir vérifié que tout fonctionne !
+-- DROP TABLE IF EXISTS public.admins CASCADE;
+
+-- 12. Afficher un résumé de la migration
+SELECT 
+  'Migration terminée!' as status,
+  COUNT(*) as total_users,
+  SUM(CASE WHEN role = 'admin' THEN 1 ELSE 0 END) as admins,
+  SUM(CASE WHEN role = 'client' THEN 1 ELSE 0 END) as clients,
+  SUM(CASE WHEN role = 'prestataire' THEN 1 ELSE 0 END) as prestataires
+FROM public.user_roles;
