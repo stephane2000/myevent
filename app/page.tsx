@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 
 export default function Home() {
   const [user, setUser] = useState<any>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
@@ -19,6 +20,15 @@ export default function Home() {
       router.push('/login')
     } else {
       setUser(user)
+
+      // Vérifier si l'utilisateur est admin dans la table admins
+      const { data: adminData } = await supabase
+        .from('admins')
+        .select('is_admin')
+        .eq('user_id', user.id)
+        .single()
+
+      setIsAdmin(adminData?.is_admin || false)
     }
     setLoading(false)
   }
@@ -35,8 +45,6 @@ export default function Home() {
       </div>
     )
   }
-
-  const isAdmin = user?.user_metadata?.is_admin || false
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8">
