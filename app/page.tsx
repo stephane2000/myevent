@@ -23,7 +23,7 @@ export default function Home() {
               href="/register"
               className="px-8 py-4 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-amber-700 transition-all shadow-2xl shadow-orange-500/30"
             >
-              Commencer gratuitement
+              Créer mon compte
             </Link>
             <Link
               href="/prestataires"
@@ -114,22 +114,22 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* Stats Section */}
       <section className="py-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="bg-gradient-to-br from-orange-100 to-amber-100 rounded-3xl p-12 border border-orange-200 shadow-xl">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Prêt à commencer ?
-            </h2>
-            <p className="text-gray-700 mb-8 text-lg">
-              Rejoignez des centaines de clients et prestataires satisfaits
-            </p>
-            <Link
-              href="/register"
-              className="inline-block px-8 py-4 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-amber-700 transition-all shadow-2xl shadow-orange-500/30"
-            >
-              Créer mon compte gratuitement
-            </Link>
+        <div className="max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center p-8 bg-white rounded-2xl border border-orange-100 shadow-lg">
+              <div className="text-4xl font-bold text-orange-600 mb-2">500+</div>
+              <p className="text-gray-600">Prestataires qualifiés</p>
+            </div>
+            <div className="text-center p-8 bg-white rounded-2xl border border-orange-100 shadow-lg">
+              <div className="text-4xl font-bold text-orange-600 mb-2">2000+</div>
+              <p className="text-gray-600">Événements réussis</p>
+            </div>
+            <div className="text-center p-8 bg-white rounded-2xl border border-orange-100 shadow-lg">
+              <div className="text-4xl font-bold text-orange-600 mb-2">98%</div>
+              <p className="text-gray-600">Clients satisfaits</p>
+            </div>
           </div>
         </div>
       </section>
