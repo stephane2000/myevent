@@ -25,6 +25,7 @@ export default function Register() {
         options: {
           data: {
             first_name: firstName,
+            is_admin: false,
           }
         }
       })

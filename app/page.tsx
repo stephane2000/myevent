@@ -36,12 +36,22 @@ export default function Home() {
     )
   }
 
+  const isAdmin = user?.user_metadata?.is_admin || false
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8">
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
         <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">
           Bienvenue {user?.user_metadata?.first_name || 'utilisateur'}
         </h1>
+
+        {isAdmin && (
+          <div className="mb-6 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded">
+            <p className="font-bold">🔑 Administrateur</p>
+            <p className="text-sm">Vous avez les droits d'administration</p>
+          </div>
+        )}
+
         <p className="text-center text-gray-600 mb-8">
           Vous êtes connecté à MyEvent
         </p>
