@@ -2,7 +2,8 @@
 -- À exécuter dans Supabase Dashboard > SQL Editor
 
 -- Créer un type ENUM pour les rôles d'utilisateur
-CREATE TYPE user_role_type AS ENUM ('client', 'prestataire', 'admin');
+-- Note: 'admin' est géré par le champ is_admin, pas par le rôle
+CREATE TYPE user_role_type AS ENUM ('client', 'prestataire');
 
 -- Créer la table user_roles
 CREATE TABLE IF NOT EXISTS public.user_roles (
@@ -32,8 +33,14 @@ CREATE POLICY "Users can update their own role"
   WITH CHECK (
     auth.uid() = user_id 
     AND role IN ('client', 'prestataire')
-    AND is_admin = false
+    AND is_admin = (SELECT is_admin FROM public.user_roles WHERE user_id = auth.uid())
   );
+
+-- Policy : Les utilisateurs peuvent insérer leur propre rôle lors de l'inscription
+CREATE POLICY "Users can insert their own role"
+  ON public.user_roles
+  FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
 
 -- Policy : Seuls les admins peuvent modifier is_admin et tous les rôles
 CREATE POLICY "Only admins can manage admin status"
@@ -45,25 +52,9 @@ CREATE POLICY "Only admins can manage admin status"
     )
   );
 
--- Créer un trigger pour ajouter automatiquement une entrée dans user_roles lors de l'inscription
--- Note: Le rôle sera défini à 'client' par défaut, mais sera mis à jour lors de la finalisation de l'inscription
-CREATE OR REPLACE FUNCTION public.handle_new_user_role()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public.user_roles (user_id, role, is_admin)
-  VALUES (NEW.id, 'client', false);
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Supprimer le trigger s'il existe déjà
-DROP TRIGGER IF EXISTS on_auth_user_created_role ON auth.users;
-
--- Créer le trigger
-CREATE TRIGGER on_auth_user_created_role
-  AFTER INSERT ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION public.handle_new_user_role();
+-- Note: Pas de trigger automatique pour user_roles
+-- L'insertion du rôle est gérée manuellement dans l'application
+-- lors de l'inscription pour permettre à l'utilisateur de choisir son rôle
 
 -- Index pour améliorer les performances
 CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON public.user_roles(user_id);

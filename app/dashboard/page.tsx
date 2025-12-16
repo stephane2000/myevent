@@ -8,6 +8,7 @@ import Navbar from '@/components/Navbar'
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null)
   const [userRole, setUserRole] = useState<string>('client')
+  const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
@@ -22,14 +23,17 @@ export default function Dashboard() {
     } else {
       setUser(user)
 
-      // Récupérer le rôle de l'utilisateur depuis user_roles
+      // Récupérer le rôle et le statut admin de l'utilisateur
       const { data: roleData } = await supabase
         .from('user_roles')
-        .select('role')
+        .select('role, is_admin')
         .eq('user_id', user.id)
         .single()
 
-      setUserRole(roleData?.role || 'client')
+      if (roleData) {
+        setUserRole(roleData.role)
+        setIsAdmin(roleData.is_admin || false)
+      }
     }
     setLoading(false)
   }
@@ -56,7 +60,7 @@ export default function Dashboard() {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
                 Bienvenue {user?.user_metadata?.first_name || 'utilisateur'}{' '}
-                <span className="text-orange-600">({userRole})</span>
+                <span className="text-orange-600">({isAdmin ? 'admin' : userRole})</span>
               </h1>
               <p className="text-gray-600">{user?.email}</p>
             </div>

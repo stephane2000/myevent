@@ -34,14 +34,20 @@ export default function Register() {
       if (error) throw error
 
       if (data.user) {
-        // Mettre à jour le rôle dans la table user_roles
+        // Créer l'entrée dans user_roles avec le rôle choisi
         const { error: roleError } = await supabase
           .from('user_roles')
-          .update({ role: userRole })
-          .eq('user_id', data.user.id)
+          .insert({ 
+            user_id: data.user.id,
+            role: userRole,
+            is_admin: false
+          })
 
         if (roleError) {
-          console.error('Erreur lors de la mise à jour du rôle:', roleError)
+          console.error('Erreur lors de la création du rôle:', roleError)
+          setError('Erreur lors de la création du compte. Veuillez réessayer.')
+          setLoading(false)
+          return
         }
 
         alert('Inscription réussie ! Veuillez vérifier votre email pour confirmer votre compte.')

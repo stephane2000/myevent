@@ -1,12 +1,9 @@
 -- Script de migration de la table admins vers user_roles
 -- À exécuter dans Supabase Dashboard > SQL Editor
 
--- 1. Créer le type ENUM s'il n'existe pas déjà
-DO $$ BEGIN
-  CREATE TYPE user_role_type AS ENUM ('client', 'prestataire', 'admin');
-EXCEPTION
-  WHEN duplicate_object THEN null;
-END $$;
+-- 1. Supprimer l'ancien type ENUM s'il existe et créer le nouveau
+DROP TYPE IF EXISTS user_role_type CASCADE;
+CREATE TYPE user_role_type AS ENUM ('client', 'prestataire');
 
 -- 2. Créer la nouvelle table user_roles
 CREATE TABLE IF NOT EXISTS public.user_roles (
@@ -23,10 +20,7 @@ CREATE TABLE IF NOT EXISTS public.user_roles (
 INSERT INTO public.user_roles (user_id, role, is_admin, created_at, updated_at)
 SELECT 
   user_id, 
-  CASE 
-    WHEN is_admin = true THEN 'admin'::user_role_type
-    ELSE 'client'::user_role_type
-  END as role,
+  'client'::user_role_type as role,
   is_admin,
   created_at,
   updated_at
@@ -55,8 +49,14 @@ CREATE POLICY "Users can update their own role"
   WITH CHECK (
     auth.uid() = user_id 
     AND role IN ('client', 'prestataire')
-    AND is_admin = false
+    AND is_admin = (SELECT is_admin FROM public.user_roles WHERE user_id = auth.uid())
   );
+
+DROP POLICY IF EXISTS "Users can insert their own role" ON public.user_roles;
+CREATE POLICY "Users can insert their own role"
+  ON public.user_roles
+  FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
 
 DROP POLICY IF EXISTS "Only admins can manage admin status" ON public.user_roles;
 CREATE POLICY "Only admins can manage admin status"
@@ -72,21 +72,12 @@ CREATE POLICY "Only admins can manage admin status"
 DROP TRIGGER IF EXISTS on_auth_user_created_admin ON auth.users;
 DROP FUNCTION IF EXISTS public.handle_new_user_admin();
 
--- 8. Créer le nouveau trigger
-CREATE OR REPLACE FUNCTION public.handle_new_user_role()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public.user_roles (user_id, role, is_admin)
-  VALUES (NEW.id, 'client', false);
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
+-- 8. SUPPRIMER le trigger automatique (géré manuellement dans l'app)
 DROP TRIGGER IF EXISTS on_auth_user_created_role ON auth.users;
-CREATE TRIGGER on_auth_user_created_role
-  AFTER INSERT ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION public.handle_new_user_role();
+DROP FUNCTION IF EXISTS public.handle_new_user_role();
+
+-- Note: L'insertion du rôle sera gérée manuellement dans l'application
+-- lors de l'inscription pour permettre de choisir le rôle
 
 -- 9. Créer les index
 CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON public.user_roles(user_id);
@@ -134,7 +125,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 SELECT 
   'Migration terminée!' as status,
   COUNT(*) as total_users,
-  SUM(CASE WHEN role = 'admin' THEN 1 ELSE 0 END) as admins,
+  SUM(CASE WHEN is_admin = true THEN 1 ELSE 0 END) as admins,
   SUM(CASE WHEN role = 'client' THEN 1 ELSE 0 END) as clients,
   SUM(CASE WHEN role = 'prestataire' THEN 1 ELSE 0 END) as prestataires
 FROM public.user_roles;
