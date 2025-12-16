@@ -1,12 +1,18 @@
 -- Script de migration de la table admins vers user_roles
 -- À exécuter dans Supabase Dashboard > SQL Editor
 
--- 1. Supprimer l'ancien type ENUM s'il existe et créer le nouveau
-DROP TYPE IF EXISTS user_role_type CASCADE;
-CREATE TYPE user_role_type AS ENUM ('client', 'prestataire');
+-- 1. Créer le type ENUM s'il n'existe pas
+DO $$ BEGIN
+    CREATE TYPE user_role_type AS ENUM ('client', 'prestataire');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- 2. Créer la nouvelle table user_roles
-CREATE TABLE IF NOT EXISTS public.user_roles (
+-- 2. Si la table user_roles existe déjà sans colonne role, on la supprime et recrée
+DROP TABLE IF EXISTS public.user_roles CASCADE;
+
+-- 3. Créer la table user_roles avec la bonne structure
+CREATE TABLE public.user_roles (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   role user_role_type NOT NULL DEFAULT 'client',
@@ -16,25 +22,30 @@ CREATE TABLE IF NOT EXISTS public.user_roles (
   UNIQUE(user_id)
 );
 
--- 3. Migrer les données existantes de admins vers user_roles
-INSERT INTO public.user_roles (user_id, role, is_admin, created_at, updated_at)
-SELECT 
-  user_id, 
-  'client'::user_role_type as role,
-  is_admin,
-  created_at,
-  updated_at
-FROM public.admins
-ON CONFLICT (user_id) DO NOTHING;
+-- 4. Migrer les données existantes de admins vers user_roles (si la table admins existe)
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'admins') THEN
+    INSERT INTO public.user_roles (user_id, role, is_admin, created_at, updated_at)
+    SELECT 
+      user_id, 
+      'client'::user_role_type as role,
+      is_admin,
+      created_at,
+      updated_at
+    FROM public.admins
+    ON CONFLICT (user_id) DO NOTHING;
+  END IF;
+END $$;
 
--- 4. Activer RLS sur la nouvelle table
+-- 5. Activer RLS sur la nouvelle table
 ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
 
--- 5. Supprimer les anciennes policies de la table admins si elles existent
+-- 6. Supprimer les anciennes policies si elles existent
 DROP POLICY IF EXISTS "Anyone can read admins" ON public.admins;
 DROP POLICY IF EXISTS "Only admins can update admins" ON public.admins;
 
--- 6. Créer les nouvelles policies
+-- 7. Créer les nouvelles policies
 DROP POLICY IF EXISTS "Users can read their own role" ON public.user_roles;
 CREATE POLICY "Users can read their own role"
   ON public.user_roles
@@ -68,23 +79,25 @@ CREATE POLICY "Only admins can manage admin status"
     )
   );
 
--- 7. Supprimer l'ancien trigger
+-- 8. Supprimer l'ancien trigger
 DROP TRIGGER IF EXISTS on_auth_user_created_admin ON auth.users;
 DROP FUNCTION IF EXISTS public.handle_new_user_admin();
 
--- 8. SUPPRIMER le trigger automatique (géré manuellement dans l'app)
+-- 9. SUPPRIMER les anciens triggers
 DROP TRIGGER IF EXISTS on_auth_user_created_role ON auth.users;
+DROP TRIGGER IF EXISTS on_auth_user_created_admin ON auth.users;
 DROP FUNCTION IF EXISTS public.handle_new_user_role();
+DROP FUNCTION IF EXISTS public.handle_new_user_admin();
 
 -- Note: L'insertion du rôle sera gérée manuellement dans l'application
 -- lors de l'inscription pour permettre de choisir le rôle
 
--- 9. Créer les index
+-- 10. Créer les index
 CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON public.user_roles(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_roles_role ON public.user_roles(role);
 CREATE INDEX IF NOT EXISTS idx_user_roles_is_admin ON public.user_roles(is_admin);
 
--- 10. Créer les fonctions utilitaires
+-- 11. Créer les fonctions utilitaires
 CREATE OR REPLACE FUNCTION public.is_user_admin(check_user_id uuid)
 RETURNS boolean AS $$
 BEGIN
@@ -117,11 +130,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 11. (OPTIONNEL) Supprimer l'ancienne table admins après vérification
+-- 12. (OPTIONNEL) Supprimer l'ancienne table admins après vérification
 -- ATTENTION : Décommenter uniquement après avoir vérifié que tout fonctionne !
 -- DROP TABLE IF EXISTS public.admins CASCADE;
 
--- 12. Afficher un résumé de la migration
+-- 13. Afficher un résumé de la migration
 SELECT 
   'Migration terminée!' as status,
   COUNT(*) as total_users,
