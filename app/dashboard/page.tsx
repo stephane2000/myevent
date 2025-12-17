@@ -12,6 +12,8 @@ export default function Dashboard() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [userSettings, setUserSettings] = useState<any>(null)
   const [activities, setActivities] = useState<any[]>([])
+  const [dailyTip, setDailyTip] = useState<any>(null)
+  const [showTip, setShowTip] = useState(true)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
@@ -127,6 +129,16 @@ export default function Dashboard() {
       } else if (activityData) {
         setActivities(activityData)
       }
+
+      // Récupérer le conseil du jour
+      const { data: tipData, error: tipError } = await supabase
+        .rpc('get_daily_tip', { p_role: roleData?.[0]?.role || 'client' })
+
+      if (tipError) {
+        console.error('Erreur lors de la récupération du conseil:', tipError)
+      } else if (tipData && tipData.length > 0) {
+        setDailyTip(tipData[0])
+      }
     }
     setLoading(false)
   }
@@ -181,6 +193,33 @@ export default function Dashboard() {
             </button>
           </div>
         </div>
+
+        {/* Conseil du jour */}
+        {dailyTip && showTip && (
+          <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-4 mb-6">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-3 flex-1">
+                <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-semibold text-emerald-900 mb-1">Conseil du jour</h3>
+                  <p className="text-sm text-emerald-700 leading-relaxed">{dailyTip.tip_text}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowTip(false)}
+                className="p-2 hover:bg-emerald-100 rounded-lg transition-colors flex-shrink-0"
+              >
+                <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Stats Cards */}
         <div className="grid md:grid-cols-3 gap-4 mb-6">
