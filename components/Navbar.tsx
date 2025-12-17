@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 
 export default function Navbar() {
   const [user, setUser] = useState<any>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -40,6 +41,15 @@ export default function Navbar() {
   async function checkUser() {
     const { data: { user } } = await supabase.auth.getUser()
     setUser(user)
+    
+    // Vérifier si l'utilisateur est admin
+    if (user) {
+      const { data: roleData } = await supabase.rpc('get_current_user_role')
+      if (roleData && roleData.length > 0) {
+        setIsAdmin(roleData[0].is_admin || false)
+      }
+    }
+    
     setLoading(false)
   }
 
@@ -152,6 +162,22 @@ export default function Navbar() {
                       </svg>
                       <span className="text-sm font-medium">Paramètres</span>
                     </Link>
+
+                    {isAdmin && (
+                      <>
+                        <div className="border-t border-stone-100 my-1.5 mx-3"></div>
+                        <Link
+                          href="/admin"
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-violet-700 bg-violet-50 hover:bg-violet-100 transition-colors mx-1.5 rounded-lg"
+                        >
+                          <svg className="w-4 h-4 text-violet-500" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                          </svg>
+                          <span className="text-sm font-medium">Administration</span>
+                        </Link>
+                      </>
+                    )}
 
                     <div className="border-t border-stone-100 my-1.5 mx-3"></div>
 
