@@ -27,11 +27,26 @@ export default function Home() {
   const [prestataires, setPrestataires] = useState<Prestataire[]>([])
   const [loadingAnnonces, setLoadingAnnonces] = useState(true)
   const [loadingPrestas, setLoadingPrestas] = useState(true)
+  const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
     fetchAnnonces()
     fetchPrestataires()
+    checkUser()
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => {
+      authListener.subscription.unsubscribe()
+    }
   }, [])
+
+  async function checkUser() {
+    const { data: { user } } = await supabase.auth.getUser()
+    setUser(user)
+  }
 
   async function fetchAnnonces() {
     try {
@@ -105,18 +120,37 @@ export default function Home() {
           </p>
 
           <div className="flex gap-4 justify-center flex-wrap">
-            <Link
-              href="/register"
-              className="px-8 py-4 bg-stone-900 text-white rounded-full font-medium hover:bg-stone-800 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-stone-900/10"
-            >
-              S'inscrire gratuitement
-            </Link>
-            <Link
-              href="/prestataires"
-              className="px-8 py-4 bg-white text-stone-700 rounded-full font-medium hover:bg-stone-50 transition-all border border-stone-200 hover:border-stone-300"
-            >
-              Explorer
-            </Link>
+            {user ? (
+              <>
+                <Link
+                  href="/dashboard"
+                  className="px-8 py-4 bg-stone-900 text-white rounded-full font-medium hover:bg-stone-800 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-stone-900/10"
+                >
+                  Mon tableau de bord
+                </Link>
+                <Link
+                  href="/annonces/new"
+                  className="px-8 py-4 bg-white text-stone-700 rounded-full font-medium hover:bg-stone-50 transition-all border border-stone-200 hover:border-stone-300"
+                >
+                  Publier une annonce
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/register"
+                  className="px-8 py-4 bg-stone-900 text-white rounded-full font-medium hover:bg-stone-800 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-stone-900/10"
+                >
+                  S'inscrire gratuitement
+                </Link>
+                <Link
+                  href="/prestataires"
+                  className="px-8 py-4 bg-white text-stone-700 rounded-full font-medium hover:bg-stone-50 transition-all border border-stone-200 hover:border-stone-300"
+                >
+                  Explorer
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Scroll indicator */}
@@ -306,7 +340,12 @@ export default function Home() {
               <ul className="space-y-2 text-sm text-stone-500">
                 <li><Link href="/prestataires" className="hover:text-stone-900 transition-colors">Prestataires</Link></li>
                 <li><Link href="/annonces" className="hover:text-stone-900 transition-colors">Annonces</Link></li>
-                <li><Link href="/register" className="hover:text-stone-900 transition-colors">Inscription</Link></li>
+                {!user && (
+                  <li><Link href="/register" className="hover:text-stone-900 transition-colors">Inscription</Link></li>
+                )}
+                {user && (
+                  <li><Link href="/dashboard" className="hover:text-stone-900 transition-colors">Tableau de bord</Link></li>
+                )}
               </ul>
             </div>
             <div>
