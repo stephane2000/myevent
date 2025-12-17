@@ -23,17 +23,17 @@ export default function Dashboard() {
     } else {
       setUser(user)
 
-      // Récupérer le rôle et le statut admin de l'utilisateur
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('role, is_admin')
-        .eq('user_id', user.id)
-        .single()
+      // Récupérer le rôle et le statut admin via une fonction PostgreSQL
+      // Ceci bypass RLS de manière sécurisée
+      const { data: roleData, error } = await supabase
+        .rpc('get_current_user_role')
 
-      if (roleData) {
-        console.log('Role data récupéré:', roleData)
-        setUserRole(roleData.role)
-        setIsAdmin(roleData.is_admin || false)
+      if (error) {
+        console.error('Erreur lors de la récupération du rôle:', error)
+      } else if (roleData && roleData.length > 0) {
+        console.log('Role data récupéré:', roleData[0])
+        setUserRole(roleData[0].role)
+        setIsAdmin(roleData[0].is_admin || false)
       } else {
         console.log('Aucun role data trouvé pour user:', user.id)
       }
