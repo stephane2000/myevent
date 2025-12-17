@@ -26,7 +26,7 @@ export default function Register() {
         options: {
           data: {
             first_name: firstName,
-            role: userRole,
+            role: userRole, // Le trigger va récupérer ce rôle automatiquement
           }
         }
       })
@@ -34,22 +34,6 @@ export default function Register() {
       if (error) throw error
 
       if (data.user) {
-        // Créer l'entrée dans user_roles avec le rôle choisi
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .insert({ 
-            user_id: data.user.id,
-            role: userRole,
-            is_admin: false
-          })
-
-        if (roleError) {
-          console.error('Erreur lors de la création du rôle:', roleError)
-          setError('Erreur lors de la création du compte. Veuillez réessayer.')
-          setLoading(false)
-          return
-        }
-
         alert('Inscription réussie ! Veuillez vérifier votre email pour confirmer votre compte.')
         router.push('/login')
       }
@@ -95,6 +79,7 @@ export default function Register() {
           </p>
 
           <form onSubmit={handleRegister} className="space-y-5">
+            {/* Choix du type de compte */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Type de compte
@@ -146,71 +131,71 @@ export default function Register() {
                 id="firstName"
                 type="text"
                 required
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-              placeholder="Votre prénom"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-              placeholder="votre@email.com"
-              autoComplete="email"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-              Mot de passe
-            </label>
-            <input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-              placeholder="••••••••"
-              minLength={6}
-              autoComplete="new-password"
-            />
-          </div>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">
-              {error}
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                placeholder="Votre prénom"
+              />
             </div>
-          )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-amber-700 transition-all shadow-lg shadow-orange-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Inscription...' : 'Créer mon compte'}
-          </button>
-        </form>
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                placeholder="votre@email.com"
+                autoComplete="email"
+              />
+            </div>
 
-        <div className="mt-6 text-center">
-          <p className="text-gray-600 text-sm">
-            Déjà un compte ?{' '}
-            <Link href="/login" className="text-orange-600 hover:text-amber-600 font-semibold transition-colors">
-              Se connecter
-            </Link>
-          </p>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                Mot de passe
+              </label>
+              <input
+                id="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                placeholder="••••••••"
+                minLength={6}
+                autoComplete="new-password"
+              />
+            </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-amber-700 transition-all shadow-lg shadow-orange-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Inscription...' : 'Créer mon compte'}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-gray-600 text-sm">
+              Déjà un compte ?{' '}
+              <Link href="/login" className="text-orange-600 hover:text-amber-600 font-semibold transition-colors">
+                Se connecter
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
-    </div>
     </div>
   )
 }

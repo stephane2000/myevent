@@ -59,8 +59,9 @@ export default function Dashboard() {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                Bienvenue {user?.user_metadata?.first_name || 'utilisateur'}{' '}
-                <span className="text-orange-600">({isAdmin ? 'admin' : userRole})</span>
+                Bienvenue {user?.user_metadata?.first_name || 'utilisateur'}
+                {isAdmin && <span className="text-orange-600"> (Admin)</span>}
+                {!isAdmin && <span className="text-gray-500"> ({userRole})</span>}
               </h1>
               <p className="text-gray-600">{user?.email}</p>
             </div>
