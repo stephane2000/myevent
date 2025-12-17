@@ -129,7 +129,6 @@ export default function Dashboard() {
         { key: 'last_name', value: user.user_metadata?.last_name, label: 'Nom' },
         { key: 'phone', value: settings.phone, label: 'Téléphone' },
         { key: 'city', value: settings.city, label: 'Ville' },
-        { key: 'bio', value: settings.bio, label: 'Bio' },
       ]
       
       const filledFields = fieldsToCheck.filter(f => f.value && f.value.trim() !== '')
