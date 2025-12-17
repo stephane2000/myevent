@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 
 export default function Dashboard() {
@@ -217,26 +218,26 @@ export default function Dashboard() {
             <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Actions rapides</h2>
               <div className="space-y-3">
-                <button className="w-full text-left px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-all">
+                <Link href="/messages" className="block w-full text-left px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-all">
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">💬</span>
                     <span className="font-semibold text-gray-900">Mes messages</span>
                   </div>
-                </button>
-                <button className="w-full text-left px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-all">
+                </Link>
+                <Link href="/prestataires" className="block w-full text-left px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-all">
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">🔍</span>
                     <span className="font-semibold text-gray-900">
-                      {userRole === 'prestataire' ? 'Voir les demandes' : 'Trouver un prestataire'}
+                      {userRole === 'prestataire' ? 'Annonces' : 'Trouver un prestataire'}
                     </span>
                   </div>
-                </button>
-                <button className="w-full text-left px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-all">
+                </Link>
+                <Link href="/parametres" className="block w-full text-left px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-all">
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">⚙️</span>
                     <span className="font-semibold text-gray-900">Paramètres</span>
                   </div>
-                </button>
+                </Link>
               </div>
             </div>
 
