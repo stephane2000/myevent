@@ -167,27 +167,79 @@ export default function Home() {
 
       {/* Comment ça marche */}
       <section className="py-20 px-6 bg-white/50">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-14">
             <h2 className="text-2xl md:text-3xl font-semibold text-stone-900 mb-3">Comment ça marche ?</h2>
-            <p className="text-stone-500">Trois étapes simples pour trouver le prestataire idéal</p>
+            <p className="text-stone-500">Deux façons de se connecter sur MyEvent</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-14 h-14 bg-stone-900 text-white rounded-2xl flex items-center justify-center mx-auto mb-5 text-xl font-semibold">1</div>
-              <h3 className="font-semibold text-stone-900 mb-2">Décrivez votre besoin</h3>
-              <p className="text-stone-500">Publiez votre annonce en quelques clics</p>
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Parcours Client */}
+            <div className="p-8 rounded-3xl bg-white border border-stone-100">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-full text-sm font-medium mb-6">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                Vous cherchez un prestataire
+              </div>
+              <h3 className="text-xl font-semibold text-stone-900 mb-6">Pour les organisateurs</h3>
+              <div className="space-y-5">
+                <div className="flex gap-4">
+                  <div className="w-8 h-8 bg-stone-900 text-white rounded-lg flex items-center justify-center text-sm font-semibold shrink-0">1</div>
+                  <div>
+                    <p className="font-medium text-stone-900">Publiez votre annonce</p>
+                    <p className="text-sm text-stone-500">Décrivez votre événement et vos besoins</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="w-8 h-8 bg-stone-900 text-white rounded-lg flex items-center justify-center text-sm font-semibold shrink-0">2</div>
+                  <div>
+                    <p className="font-medium text-stone-900">Recevez des propositions</p>
+                    <p className="text-sm text-stone-500">Les prestataires intéressés vous contactent</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="w-8 h-8 bg-stone-900 text-white rounded-lg flex items-center justify-center text-sm font-semibold shrink-0">3</div>
+                  <div>
+                    <p className="font-medium text-stone-900">Choisissez le meilleur</p>
+                    <p className="text-sm text-stone-500">Comparez les profils et réservez</p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="text-center">
-              <div className="w-14 h-14 bg-stone-900 text-white rounded-2xl flex items-center justify-center mx-auto mb-5 text-xl font-semibold">2</div>
-              <h3 className="font-semibold text-stone-900 mb-2">Recevez des devis</h3>
-              <p className="text-stone-500">Les prestataires vous contactent</p>
-            </div>
-            <div className="text-center">
-              <div className="w-14 h-14 bg-stone-900 text-white rounded-2xl flex items-center justify-center mx-auto mb-5 text-xl font-semibold">3</div>
-              <h3 className="font-semibold text-stone-900 mb-2">Choisissez le meilleur</h3>
-              <p className="text-stone-500">Comparez et réservez en toute confiance</p>
+
+            {/* Parcours Prestataire */}
+            <div className="p-8 rounded-3xl bg-white border border-stone-100">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-full text-sm font-medium mb-6">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Vous proposez vos services
+              </div>
+              <h3 className="text-xl font-semibold text-stone-900 mb-6">Pour les prestataires</h3>
+              <div className="space-y-5">
+                <div className="flex gap-4">
+                  <div className="w-8 h-8 bg-stone-900 text-white rounded-lg flex items-center justify-center text-sm font-semibold shrink-0">1</div>
+                  <div>
+                    <p className="font-medium text-stone-900">Créez votre profil</p>
+                    <p className="text-sm text-stone-500">Présentez vos services et réalisations</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="w-8 h-8 bg-stone-900 text-white rounded-lg flex items-center justify-center text-sm font-semibold shrink-0">2</div>
+                  <div>
+                    <p className="font-medium text-stone-900">Soyez visible</p>
+                    <p className="text-sm text-stone-500">Les clients découvrent votre profil</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="w-8 h-8 bg-stone-900 text-white rounded-lg flex items-center justify-center text-sm font-semibold shrink-0">3</div>
+                  <div>
+                    <p className="font-medium text-stone-900">Recevez des demandes</p>
+                    <p className="text-sm text-stone-500">Les clients vous contactent directement</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
