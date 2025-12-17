@@ -169,14 +169,14 @@ export default function Home() {
       <section className="py-20 px-6">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <p className="text-sm font-medium text-amber-600 mb-2">Comment ça marche</p>
-            <h2 className="text-2xl md:text-3xl font-semibold text-stone-900">Deux façons d'utiliser MyEvent</h2>
+            <h2 className="text-2xl md:text-3xl font-semibold text-stone-900 mb-2">Comment ça marche</h2>
+            <p className="text-stone-500">Deux façons d'utiliser MyEvent</p>
           </div>
           
           <div className="grid md:grid-cols-2 gap-8">
             {/* Organisateurs */}
-            <div className="text-center p-8 rounded-2xl bg-amber-50/50">
-              <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <div className="text-center p-8 rounded-2xl bg-stone-100/50">
+              <div className="w-12 h-12 bg-stone-200 text-stone-700 rounded-xl flex items-center justify-center mx-auto mb-4">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
@@ -186,8 +186,8 @@ export default function Home() {
             </div>
 
             {/* Prestataires */}
-            <div className="text-center p-8 rounded-2xl bg-emerald-50/50">
-              <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <div className="text-center p-8 rounded-2xl bg-stone-100/50">
+              <div className="w-12 h-12 bg-stone-200 text-stone-700 rounded-xl flex items-center justify-center mx-auto mb-4">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
