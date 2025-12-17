@@ -224,7 +224,7 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <p className="font-medium text-neutral-900 text-sm">Compte créé avec succès</p>
-                    <p className="text-xs text-neutral-500 mt-0.5">Bienvenue sur MyEvent</p>
+                    <p className="text-xs text-neutral-500 mt-0.5">Bienvenue sur PrestaBase</p>
                   </div>
                 </div>
               </div>

@@ -76,7 +76,7 @@ export default function Register() {
             Créer un compte
           </h1>
           <p className="text-neutral-500 text-center mb-8 text-sm">
-            Rejoignez MyEvent gratuitement
+            Rejoignez PrestaBase gratuitement
           </p>
 
           <form onSubmit={handleRegister} className="space-y-4">

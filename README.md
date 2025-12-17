@@ -1,4 +1,4 @@
-# MyEvent
+# PrestaBase
 
 Application de gestion d'événements avec authentification, construite avec Next.js et Supabase.
 

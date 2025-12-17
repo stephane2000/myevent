@@ -69,7 +69,7 @@ export default function Navbar() {
             <div className="w-8 h-8 bg-stone-900 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
               <span className="text-white text-sm font-bold">M</span>
             </div>
-            <span className="text-lg font-semibold text-stone-900 tracking-tight">MyEvent</span>
+            <span className="text-lg font-semibold text-stone-900 tracking-tight">PrestaBase</span>
           </Link>
 
           {/* Navigation centrée */}

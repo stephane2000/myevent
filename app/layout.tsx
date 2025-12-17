@@ -9,7 +9,7 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'MyEvent',
+  title: 'PrestaBase',
   description: 'Plateforme de mise en relation pour vos événements',
 }
 
