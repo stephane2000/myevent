@@ -53,16 +53,14 @@ export default function Parametres() {
     setFirstName(user.user_metadata?.first_name || '')
     setLastName(user.user_metadata?.last_name || '')
 
-    // Charger les paramètres depuis user_settings
-    const { data: settings, error } = await supabase
-      .from('user_settings')
-      .select('*')
-      .eq('user_id', user.id)
-      .single()
+    // Charger les paramètres depuis user_settings via RPC
+    const { data: settingsData, error } = await supabase
+      .rpc('get_current_user_settings')
 
-    if (error && error.code !== 'PGRST116') {
+    if (error) {
       console.error('Erreur chargement paramètres:', error)
-    } else if (settings) {
+    } else if (settingsData && settingsData.length > 0) {
+      const settings = settingsData[0]
       setPhone(settings.phone || '')
       setAddress(settings.address || '')
       setCity(settings.city || '')
@@ -448,7 +446,7 @@ export default function Parametres() {
           <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Sécurité</h2>
 
-            <div className="space-y-4 mb-6">
+            <form onSubmit={(e) => { e.preventDefault(); handleChangePassword(); }} className="space-y-4 mb-6">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Nouveau mot de passe</label>
                 <input
@@ -456,6 +454,7 @@ export default function Parametres() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="••••••••"
+                  autoComplete="new-password"
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
@@ -466,18 +465,18 @@ export default function Parametres() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
+                  autoComplete="new-password"
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
-            </div>
-
-            <button
-              onClick={handleChangePassword}
-              disabled={saving || !newPassword || !confirmPassword}
-              className="px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-amber-700 transition-all disabled:opacity-50"
-            >
-              {saving ? 'Modification...' : 'Changer le mot de passe'}
-            </button>
+              <button
+                type="submit"
+                disabled={saving || !newPassword || !confirmPassword}
+                className="px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-amber-700 transition-all disabled:opacity-50"
+              >
+                {saving ? 'Modification...' : 'Changer le mot de passe'}
+              </button>
+            </form>
           </div>
 
           {/* Zone dangereuse */}
