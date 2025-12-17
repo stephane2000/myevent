@@ -98,7 +98,7 @@ export default function Navbar() {
                 href="/register"
                 className="px-5 py-2.5 text-sm font-medium bg-neutral-900 text-white rounded-full hover:bg-neutral-800 transition-all"
               >
-                Commencer
+                S'inscrire
               </Link>
             </div>
           )}

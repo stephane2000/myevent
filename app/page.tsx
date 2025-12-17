@@ -89,9 +89,9 @@ export default function Home() {
       {/* Hero Section - Full viewport height */}
       <section className="min-h-screen flex flex-col justify-center px-6 relative">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-100 rounded-full text-sm text-amber-700 mb-8">
-            <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></span>
-            Plateforme événementielle #1 en France
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-stone-100 border border-stone-200 rounded-full text-sm text-stone-600 mb-8">
+            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+            Trouvez le prestataire idéal pour vos événements
           </div>
           
           <h1 className="text-5xl sm:text-6xl md:text-7xl font-semibold text-stone-900 mb-6 tracking-tight leading-[1.08]">
@@ -109,7 +109,7 @@ export default function Home() {
               href="/register"
               className="px-8 py-4 bg-stone-900 text-white rounded-full font-medium hover:bg-stone-800 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-stone-900/10"
             >
-              Commencer gratuitement
+              S'inscrire gratuitement
             </Link>
             <Link
               href="/prestataires"
@@ -120,10 +120,13 @@ export default function Home() {
           </div>
 
           {/* Scroll indicator */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce hidden md:block">
-            <svg className="w-6 h-6 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce hidden md:flex flex-col items-center gap-2">
+            <span className="text-xs text-stone-400 font-medium">Défiler</span>
+            <div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center">
+              <svg className="w-5 h-5 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
+            </div>
           </div>
         </div>
       </section>
