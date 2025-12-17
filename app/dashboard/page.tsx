@@ -120,9 +120,9 @@ export default function Dashboard() {
         setUserSettings(settingsData[0])
       }
 
-      // Récupérer l'historique d'activité
+      // Récupérer l'historique d'activité (limité à 5 max)
       const { data: activityData, error: activityError } = await supabase
-        .rpc('get_user_activity', { p_limit: 10 })
+        .rpc('get_user_activity', { p_limit: 5 })
 
       if (activityError) {
         console.error('Erreur lors de la récupération de l\'activité:', activityError)
