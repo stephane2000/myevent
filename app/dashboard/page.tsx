@@ -15,8 +15,6 @@ export default function Dashboard() {
   const [dailyTip, setDailyTip] = useState<any>(null)
   const [showTip, setShowTip] = useState(true)
   const [loading, setLoading] = useState(true)
-  const [profileCompletion, setProfileCompletion] = useState(0)
-  const [missingFields, setMissingFields] = useState<string[]>([])
   const router = useRouter()
 
   useEffect(() => {
@@ -122,22 +120,6 @@ export default function Dashboard() {
         setUserSettings(settingsData[0])
       }
 
-      // Calculer le pourcentage de complétion du profil
-      const settings = settingsData?.[0] || {}
-      const fieldsToCheck = [
-        { key: 'first_name', value: user.user_metadata?.first_name, label: 'Prénom' },
-        { key: 'last_name', value: user.user_metadata?.last_name, label: 'Nom' },
-        { key: 'phone', value: settings.phone, label: 'Téléphone' },
-        { key: 'city', value: settings.city, label: 'Ville' },
-      ]
-      
-      const filledFields = fieldsToCheck.filter(f => f.value && f.value.trim() !== '')
-      const completion = Math.round((filledFields.length / fieldsToCheck.length) * 100)
-      const missing = fieldsToCheck.filter(f => !f.value || f.value.trim() === '').map(f => f.label)
-      
-      setProfileCompletion(completion)
-      setMissingFields(missing)
-
       // Récupérer l'historique d'activité (limité à 5 max)
       const { data: activityData, error: activityError } = await supabase
         .rpc('get_user_activity', { p_limit: 5 })
@@ -204,31 +186,6 @@ export default function Dashboard() {
                     </span>
                   )}
                 </div>
-                {/* Profile Completion - Only show if not 100% */}
-                {profileCompletion < 100 && (
-                  <div className="max-w-md">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="flex-1 bg-neutral-200 rounded-full h-1.5">
-                        <div 
-                          className={`h-1.5 rounded-full transition-all duration-500 ${
-                            profileCompletion >= 80 ? 'bg-emerald-500' : 
-                            profileCompletion >= 50 ? 'bg-amber-500' : 'bg-neutral-400'
-                          }`}
-                          style={{ width: `${profileCompletion}%` }}
-                        ></div>
-                      </div>
-                      <span className={`text-xs font-semibold ${
-                        profileCompletion >= 80 ? 'text-emerald-600' : 
-                        profileCompletion >= 50 ? 'text-amber-600' : 'text-neutral-500'
-                      }`}>{profileCompletion}%</span>
-                    </div>
-                    {missingFields.length > 0 && (
-                      <p className="text-xs text-neutral-400">
-                        Manquant : {missingFields.join(', ')}
-                      </p>
-                    )}
-                  </div>
-                )}
               </div>
             </div>
             <Link href="/parametres" className="px-5 py-2.5 text-sm font-medium text-neutral-700 bg-neutral-100 hover:bg-neutral-200 rounded-xl transition-all flex-shrink-0">
