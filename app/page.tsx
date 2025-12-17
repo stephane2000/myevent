@@ -166,79 +166,110 @@ export default function Home() {
       </section>
 
       {/* Comment ça marche */}
-      <section className="py-20 px-6 bg-white/50">
+      <section className="py-24 px-6">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="text-2xl md:text-3xl font-semibold text-stone-900 mb-3">Comment ça marche ?</h2>
-            <p className="text-stone-500">Deux façons de se connecter sur MyEvent</p>
+          {/* Header aligné à gauche */}
+          <div className="mb-16">
+            <p className="text-sm font-medium text-amber-600 mb-2">Comment ça marche</p>
+            <h2 className="text-3xl md:text-4xl font-semibold text-stone-900 mb-4">Deux façons de collaborer</h2>
+            <p className="text-lg text-stone-500 max-w-2xl">Que vous cherchiez un prestataire ou que vous proposiez vos services, MyEvent vous met en relation.</p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          {/* Cards avec design amélioré */}
+          <div className="grid lg:grid-cols-2 gap-6">
             {/* Parcours Client */}
-            <div className="p-8 rounded-3xl bg-white border border-stone-100">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-full text-sm font-medium mb-6">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                Vous cherchez un prestataire
-              </div>
-              <h3 className="text-xl font-semibold text-stone-900 mb-6">Pour les organisateurs</h3>
-              <div className="space-y-5">
-                <div className="flex gap-4">
-                  <div className="w-8 h-8 bg-stone-900 text-white rounded-lg flex items-center justify-center text-sm font-semibold shrink-0">1</div>
+            <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-50 to-orange-50 p-1">
+              <div className="relative bg-white rounded-[22px] p-8 h-full">
+                <div className="flex items-start justify-between mb-8">
                   <div>
-                    <p className="font-medium text-stone-900">Publiez votre annonce</p>
-                    <p className="text-sm text-stone-500">Décrivez votre événement et vos besoins</p>
+                    <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center mb-4">
+                      <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-2xl font-semibold text-stone-900">Pour les organisateurs</h3>
+                    <p className="text-stone-500 mt-1">Trouvez le prestataire idéal</p>
                   </div>
                 </div>
-                <div className="flex gap-4">
-                  <div className="w-8 h-8 bg-stone-900 text-white rounded-lg flex items-center justify-center text-sm font-semibold shrink-0">2</div>
-                  <div>
-                    <p className="font-medium text-stone-900">Recevez des propositions</p>
-                    <p className="text-sm text-stone-500">Les prestataires intéressés vous contactent</p>
+                
+                <div className="space-y-6">
+                  <div className="flex items-start gap-4 p-4 rounded-2xl bg-stone-50/50 hover:bg-stone-50 transition-colors">
+                    <div className="w-10 h-10 bg-stone-900 text-white rounded-xl flex items-center justify-center font-semibold shrink-0">1</div>
+                    <div>
+                      <p className="font-semibold text-stone-900">Publiez votre annonce</p>
+                      <p className="text-sm text-stone-500 mt-0.5">Décrivez votre événement, votre budget et vos attentes</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4 p-4 rounded-2xl bg-stone-50/50 hover:bg-stone-50 transition-colors">
+                    <div className="w-10 h-10 bg-stone-900 text-white rounded-xl flex items-center justify-center font-semibold shrink-0">2</div>
+                    <div>
+                      <p className="font-semibold text-stone-900">Recevez des propositions</p>
+                      <p className="text-sm text-stone-500 mt-0.5">Les prestataires intéressés vous envoient leurs devis</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4 p-4 rounded-2xl bg-stone-50/50 hover:bg-stone-50 transition-colors">
+                    <div className="w-10 h-10 bg-stone-900 text-white rounded-xl flex items-center justify-center font-semibold shrink-0">3</div>
+                    <div>
+                      <p className="font-semibold text-stone-900">Choisissez & réservez</p>
+                      <p className="text-sm text-stone-500 mt-0.5">Comparez les profils, lisez les avis et finalisez</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex gap-4">
-                  <div className="w-8 h-8 bg-stone-900 text-white rounded-lg flex items-center justify-center text-sm font-semibold shrink-0">3</div>
-                  <div>
-                    <p className="font-medium text-stone-900">Choisissez le meilleur</p>
-                    <p className="text-sm text-stone-500">Comparez les profils et réservez</p>
-                  </div>
-                </div>
+
+                <Link href="/register" className="inline-flex items-center gap-2 mt-8 text-amber-600 font-medium hover:text-amber-700 transition-colors">
+                  Publier une annonce
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </Link>
               </div>
             </div>
 
             {/* Parcours Prestataire */}
-            <div className="p-8 rounded-3xl bg-white border border-stone-100">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-full text-sm font-medium mb-6">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                Vous proposez vos services
-              </div>
-              <h3 className="text-xl font-semibold text-stone-900 mb-6">Pour les prestataires</h3>
-              <div className="space-y-5">
-                <div className="flex gap-4">
-                  <div className="w-8 h-8 bg-stone-900 text-white rounded-lg flex items-center justify-center text-sm font-semibold shrink-0">1</div>
+            <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-50 to-teal-50 p-1">
+              <div className="relative bg-white rounded-[22px] p-8 h-full">
+                <div className="flex items-start justify-between mb-8">
                   <div>
-                    <p className="font-medium text-stone-900">Créez votre profil</p>
-                    <p className="text-sm text-stone-500">Présentez vos services et réalisations</p>
+                    <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center mb-4">
+                      <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-2xl font-semibold text-stone-900">Pour les prestataires</h3>
+                    <p className="text-stone-500 mt-1">Développez votre clientèle</p>
                   </div>
                 </div>
-                <div className="flex gap-4">
-                  <div className="w-8 h-8 bg-stone-900 text-white rounded-lg flex items-center justify-center text-sm font-semibold shrink-0">2</div>
-                  <div>
-                    <p className="font-medium text-stone-900">Soyez visible</p>
-                    <p className="text-sm text-stone-500">Les clients découvrent votre profil</p>
+                
+                <div className="space-y-6">
+                  <div className="flex items-start gap-4 p-4 rounded-2xl bg-stone-50/50 hover:bg-stone-50 transition-colors">
+                    <div className="w-10 h-10 bg-stone-900 text-white rounded-xl flex items-center justify-center font-semibold shrink-0">1</div>
+                    <div>
+                      <p className="font-semibold text-stone-900">Créez votre profil pro</p>
+                      <p className="text-sm text-stone-500 mt-0.5">Présentez vos services, tarifs et réalisations</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4 p-4 rounded-2xl bg-stone-50/50 hover:bg-stone-50 transition-colors">
+                    <div className="w-10 h-10 bg-stone-900 text-white rounded-xl flex items-center justify-center font-semibold shrink-0">2</div>
+                    <div>
+                      <p className="font-semibold text-stone-900">Gagnez en visibilité</p>
+                      <p className="text-sm text-stone-500 mt-0.5">Apparaissez dans les recherches des organisateurs</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4 p-4 rounded-2xl bg-stone-50/50 hover:bg-stone-50 transition-colors">
+                    <div className="w-10 h-10 bg-stone-900 text-white rounded-xl flex items-center justify-center font-semibold shrink-0">3</div>
+                    <div>
+                      <p className="font-semibold text-stone-900">Recevez des demandes</p>
+                      <p className="text-sm text-stone-500 mt-0.5">Les clients vous contactent directement</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex gap-4">
-                  <div className="w-8 h-8 bg-stone-900 text-white rounded-lg flex items-center justify-center text-sm font-semibold shrink-0">3</div>
-                  <div>
-                    <p className="font-medium text-stone-900">Recevez des demandes</p>
-                    <p className="text-sm text-stone-500">Les clients vous contactent directement</p>
-                  </div>
-                </div>
+
+                <Link href="/register" className="inline-flex items-center gap-2 mt-8 text-emerald-600 font-medium hover:text-emerald-700 transition-colors">
+                  Créer mon profil
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </Link>
               </div>
             </div>
           </div>
@@ -246,7 +277,7 @@ export default function Home() {
       </section>
 
       {/* Meilleurs prestataires */}
-      <section className="py-20 px-6">
+      <section className="py-20 px-6 bg-white/50">
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <div>
