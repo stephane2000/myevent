@@ -83,20 +83,14 @@ export default function Register() {
       if (error) throw error
 
       if (data.user) {
-        // Sauvegarder les données dans user_settings
-        const { error: settingsError } = await supabase
-          .from('user_settings')
-          .insert({
-            user_id: data.user.id,
-            phone: `${phoneCountryCode}${phone}`,
-            address: address,
-            city: city,
-            postal_code: postalCode,
-          })
-
-        if (settingsError) {
-          console.error('Erreur lors de la sauvegarde des paramètres:', settingsError)
+        // Stocker temporairement les données dans localStorage pour les sauvegarder après connexion
+        const pendingUserData = {
+          phone: `${phoneCountryCode} ${phone}`,
+          address,
+          city,
+          postal_code: postalCode,
         }
+        localStorage.setItem('pendingUserSettings', JSON.stringify(pendingUserData))
 
         alert('Inscription réussie ! Veuillez vérifier votre email pour confirmer votre compte.')
         router.push('/login')

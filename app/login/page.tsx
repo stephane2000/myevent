@@ -26,6 +26,24 @@ export default function Login() {
       if (error) throw error
 
       if (data.user) {
+        // Vérifier s'il y a des données en attente depuis l'inscription
+        const pendingData = localStorage.getItem('pendingUserSettings')
+        if (pendingData) {
+          try {
+            const settings = JSON.parse(pendingData)
+            // Sauvegarder dans user_settings
+            await supabase
+              .from('user_settings')
+              .update(settings)
+              .eq('user_id', data.user.id)
+
+            // Nettoyer le localStorage
+            localStorage.removeItem('pendingUserSettings')
+          } catch (err) {
+            console.error('Erreur sauvegarde settings:', err)
+          }
+        }
+
         router.push('/dashboard')
       }
     } catch (error: any) {
