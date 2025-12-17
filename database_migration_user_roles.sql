@@ -40,30 +40,59 @@ CREATE TABLE public.user_roles (
 );
 
 -- ========================================
--- 4. ACTIVER RLS
+-- 4. CRÉER LA FONCTION TRIGGER (AVANT RLS)
+-- ========================================
+
+CREATE OR REPLACE FUNCTION public.handle_new_user_role()
+RETURNS trigger
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  -- Récupérer le rôle depuis les métadonnées utilisateur (défini lors de l'inscription)
+  INSERT INTO public.user_roles (user_id, role, is_admin)
+  VALUES (
+    NEW.id,
+    COALESCE((NEW.raw_user_meta_data->>'role')::user_role_type, 'client'::user_role_type),
+    false
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ========================================
+-- 5. CRÉER LE TRIGGER
+-- ========================================
+
+CREATE TRIGGER on_auth_user_created_role
+  AFTER INSERT ON auth.users
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_new_user_role();
+
+-- ========================================
+-- 6. ACTIVER RLS
 -- ========================================
 
 ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
 
 -- ========================================
--- 5. CRÉER LES POLICIES RLS
+-- 7. CRÉER LES POLICIES RLS
 -- ========================================
 
--- Permettre à tout le monde de lire (pour afficher les infos publiques)
+-- Permettre à tout le monde de lire
 CREATE POLICY "Allow public read access"
   ON public.user_roles
   FOR SELECT
-  TO public
   USING (true);
 
--- Permettre l'insertion uniquement via la fonction trigger
+-- Permettre l'insertion pour les utilisateurs authentifiés
 CREATE POLICY "Allow insert for authenticated users"
   ON public.user_roles
   FOR INSERT
   TO authenticated
   WITH CHECK (auth.uid() = user_id);
 
--- Permettre la mise à jour uniquement du rôle (pas is_admin)
+-- Permettre la mise à jour du rôle seulement
 CREATE POLICY "Allow users to update their own role"
   ON public.user_roles
   FOR UPDATE
@@ -87,33 +116,6 @@ CREATE POLICY "Allow admins full access"
   );
 
 -- ========================================
--- 6. CRÉER LA FONCTION TRIGGER
--- ========================================
-
-CREATE OR REPLACE FUNCTION public.handle_new_user_role()
-RETURNS trigger AS $$
-BEGIN
-  -- Récupérer le rôle depuis les métadonnées utilisateur (défini lors de l'inscription)
-  INSERT INTO public.user_roles (user_id, role, is_admin)
-  VALUES (
-    NEW.id,
-    COALESCE((NEW.raw_user_meta_data->>'role')::user_role_type, 'client'::user_role_type),
-    false
-  );
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- ========================================
--- 7. CRÉER LE TRIGGER
--- ========================================
-
-CREATE TRIGGER on_auth_user_created_role
-  AFTER INSERT ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION public.handle_new_user_role();
-
--- ========================================
 -- 8. CRÉER LES INDEX
 -- ========================================
 
@@ -126,17 +128,25 @@ CREATE INDEX idx_user_roles_is_admin ON public.user_roles(is_admin);
 -- ========================================
 
 CREATE OR REPLACE FUNCTION public.is_user_admin(check_user_id uuid)
-RETURNS boolean AS $$
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 BEGIN
   RETURN EXISTS (
     SELECT 1 FROM public.user_roles
     WHERE user_id = check_user_id AND is_admin = true
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 CREATE OR REPLACE FUNCTION public.get_user_role(check_user_id uuid)
-RETURNS user_role_type AS $$
+RETURNS user_role_type
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 DECLARE
   user_role user_role_type;
 BEGIN
@@ -145,17 +155,21 @@ BEGIN
   WHERE user_id = check_user_id;
   RETURN COALESCE(user_role, 'client'::user_role_type);
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 CREATE OR REPLACE FUNCTION public.is_user_prestataire(check_user_id uuid)
-RETURNS boolean AS $$
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 BEGIN
   RETURN EXISTS (
     SELECT 1 FROM public.user_roles
     WHERE user_id = check_user_id AND role = 'prestataire'
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- ========================================
 -- 10. RÉSUMÉ
