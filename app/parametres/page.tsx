@@ -97,10 +97,16 @@ export default function Parametres() {
     setMessage(null)
 
     try {
-      if (field === 'name') {
-        // Mettre à jour prénom et nom
+      if (field === 'firstName') {
+        // Mettre à jour le prénom
         const { error } = await supabase.auth.updateUser({
-          data: { first_name: firstName, last_name: lastName }
+          data: { first_name: firstName }
+        })
+        if (error) throw error
+      } else if (field === 'lastName') {
+        // Mettre à jour le nom
+        const { error } = await supabase.auth.updateUser({
+          data: { last_name: lastName }
         })
         if (error) throw error
       } else if (field === 'phone') {
@@ -123,7 +129,8 @@ export default function Parametres() {
       // Logger l'activité
       await supabase.rpc('log_user_activity', {
         p_action_type: 'profile_updated',
-        p_action_description: field === 'name' ? 'Nom et prénom mis à jour' :
+        p_action_description: field === 'firstName' ? 'Prénom mis à jour' :
+                             field === 'lastName' ? 'Nom mis à jour' :
                              field === 'phone' ? 'Numéro de téléphone mis à jour' :
                              'Adresse mise à jour',
         p_metadata: { field }
@@ -325,12 +332,12 @@ export default function Parametres() {
                 <p className="text-neutral-500 text-sm mb-6">Cliquez sur l'icône pour modifier un champ</p>
 
                 <div className="space-y-4">
-                  {/* Nom complet */}
+                  {/* Prénom */}
                   <div className="p-4 bg-neutral-50 rounded-xl">
                     <div className="flex items-center justify-between mb-2">
-                      <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wide">Nom complet</label>
+                      <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wide">Prénom</label>
                       <button
-                        onClick={() => setEditingField(editingField === 'name' ? null : 'name')}
+                        onClick={() => setEditingField(editingField === 'firstName' ? null : 'firstName')}
                         className="p-2 hover:bg-neutral-200 rounded-lg transition-colors"
                       >
                         <svg className="w-4 h-4 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -338,27 +345,18 @@ export default function Parametres() {
                         </svg>
                       </button>
                     </div>
-                    {editingField === 'name' ? (
+                    {editingField === 'firstName' ? (
                       <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-3">
-                          <input
-                            type="text"
-                            value={firstName}
-                            onChange={(e) => setFirstName(e.target.value)}
-                            placeholder="Prénom"
-                            className="px-3 py-2 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-900 text-sm"
-                          />
-                          <input
-                            type="text"
-                            value={lastName}
-                            onChange={(e) => setLastName(e.target.value)}
-                            placeholder="Nom"
-                            className="px-3 py-2 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-900 text-sm"
-                          />
-                        </div>
+                        <input
+                          type="text"
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                          placeholder="Prénom"
+                          className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-900 text-sm"
+                        />
                         <div className="flex gap-2">
                           <button
-                            onClick={() => handleSaveField('name')}
+                            onClick={() => handleSaveField('firstName')}
                             disabled={saving}
                             className="px-4 py-2 bg-neutral-900 text-white rounded-lg text-xs font-medium hover:bg-neutral-800 transition-all disabled:opacity-50"
                           >
@@ -373,7 +371,50 @@ export default function Parametres() {
                         </div>
                       </div>
                     ) : (
-                      <p className="text-sm text-neutral-900">{firstName} {lastName}</p>
+                      <p className="text-sm text-neutral-900">{firstName || 'Non renseigné'}</p>
+                    )}
+                  </div>
+
+                  {/* Nom */}
+                  <div className="p-4 bg-neutral-50 rounded-xl">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wide">Nom</label>
+                      <button
+                        onClick={() => setEditingField(editingField === 'lastName' ? null : 'lastName')}
+                        className="p-2 hover:bg-neutral-200 rounded-lg transition-colors"
+                      >
+                        <svg className="w-4 h-4 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                      </button>
+                    </div>
+                    {editingField === 'lastName' ? (
+                      <div className="space-y-3">
+                        <input
+                          type="text"
+                          value={lastName}
+                          onChange={(e) => setLastName(e.target.value)}
+                          placeholder="Nom"
+                          className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-900 text-sm"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleSaveField('lastName')}
+                            disabled={saving}
+                            className="px-4 py-2 bg-neutral-900 text-white rounded-lg text-xs font-medium hover:bg-neutral-800 transition-all disabled:opacity-50"
+                          >
+                            Enregistrer
+                          </button>
+                          <button
+                            onClick={() => setEditingField(null)}
+                            className="px-4 py-2 bg-neutral-200 text-neutral-700 rounded-lg text-xs font-medium hover:bg-neutral-300 transition-all"
+                          >
+                            Annuler
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-neutral-900">{lastName || 'Non renseigné'}</p>
                     )}
                   </div>
 
