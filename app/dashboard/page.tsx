@@ -163,16 +163,16 @@ export default function Dashboard() {
         {/* Header Section */}
         <div className="bg-white/80 backdrop-blur-xl border border-neutral-200/60 rounded-3xl p-8 shadow-apple mb-6">
           <div className="flex items-start justify-between">
-            <div className="flex items-center gap-5">
-              <div className="w-20 h-20 bg-gradient-to-br from-neutral-200 to-neutral-300 rounded-2xl flex items-center justify-center text-neutral-600 text-3xl font-semibold">
+            <div className="flex items-center gap-5 flex-1">
+              <div className="w-20 h-20 bg-gradient-to-br from-neutral-200 to-neutral-300 rounded-2xl flex items-center justify-center text-neutral-600 text-3xl font-semibold flex-shrink-0">
                 {(user?.user_metadata?.first_name?.[0] || 'U').toUpperCase()}
               </div>
-              <div>
+              <div className="flex-1">
                 <h1 className="text-3xl font-semibold text-neutral-900 mb-1">
                   {user?.user_metadata?.first_name || 'Utilisateur'}
                 </h1>
                 <p className="text-neutral-500 text-sm mb-3">{user?.email}</p>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 mb-4">
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                     userRole === 'prestataire'
                       ? 'bg-neutral-900 text-white'
@@ -186,11 +186,22 @@ export default function Dashboard() {
                     </span>
                   )}
                 </div>
+                {/* Profile Completion */}
+                <div className="max-w-md">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-semibold text-neutral-900">Complétez votre profil</span>
+                    <span className="text-xs font-medium text-neutral-600">25%</span>
+                  </div>
+                  <div className="bg-neutral-200 rounded-full h-2 mb-1.5">
+                    <div className="bg-neutral-900 rounded-full h-2 w-1/4 transition-all"></div>
+                  </div>
+                  <p className="text-xs text-neutral-500">Un profil complet augmente vos chances de succès</p>
+                </div>
               </div>
             </div>
-            <button className="px-5 py-2.5 text-sm font-medium text-neutral-700 bg-neutral-100 hover:bg-neutral-200 rounded-xl transition-all">
+            <Link href="/parametres" className="px-5 py-2.5 text-sm font-medium text-neutral-700 bg-neutral-100 hover:bg-neutral-200 rounded-xl transition-all flex-shrink-0">
               Modifier le profil
-            </button>
+            </Link>
           </div>
         </div>
 
@@ -465,27 +476,6 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Profile Completion */}
-            <div className="bg-neutral-900 rounded-2xl p-6 text-white">
-              <h2 className="text-lg font-semibold mb-2">Complétez votre profil</h2>
-              <p className="text-neutral-400 text-sm mb-4">
-                Un profil complet augmente vos chances de succès
-              </p>
-              <div className="bg-white/10 rounded-full h-1.5 mb-2">
-                <div className="bg-white rounded-full h-1.5 w-1/4"></div>
-              </div>
-              <p className="text-xs text-neutral-400">25% complété</p>
-            </div>
-
-            {/* Tips */}
-            <div className="bg-white border border-neutral-100 rounded-2xl p-6">
-              <h2 className="text-lg font-semibold text-neutral-900 mb-3">💡 Conseil</h2>
-              <p className="text-neutral-600 text-sm leading-relaxed">
-                {userRole === 'prestataire'
-                  ? 'Ajoutez des photos de vos réalisations pour augmenter votre visibilité.'
-                  : 'Définissez clairement votre budget pour recevoir des propositions pertinentes.'}
-              </p>
-            </div>
           </div>
         </div>
       </main>
