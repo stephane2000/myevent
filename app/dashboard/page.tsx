@@ -93,30 +93,30 @@ export default function Dashboard() {
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           {userRole === 'prestataire' ? (
             <>
-              <div className="bg-white border border-orange-100 rounded-2xl p-6 shadow-lg">
+              <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-gray-600 font-medium">Services actifs</span>
-                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl flex items-center justify-center text-white text-xl">
+                  <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-2xl">
                     📋
                   </div>
                 </div>
                 <p className="text-3xl font-bold text-gray-900">0</p>
                 <p className="text-sm text-gray-500 mt-1">Annonces publiées</p>
               </div>
-              <div className="bg-white border border-orange-100 rounded-2xl p-6 shadow-lg">
+              <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-gray-600 font-medium">Demandes reçues</span>
-                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl flex items-center justify-center text-white text-xl">
+                  <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-2xl">
                     📬
                   </div>
                 </div>
                 <p className="text-3xl font-bold text-gray-900">0</p>
                 <p className="text-sm text-gray-500 mt-1">Cette semaine</p>
               </div>
-              <div className="bg-white border border-orange-100 rounded-2xl p-6 shadow-lg">
+              <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-gray-600 font-medium">Note moyenne</span>
-                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl flex items-center justify-center text-white text-xl">
+                  <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-2xl">
                     ⭐
                   </div>
                 </div>
@@ -126,30 +126,30 @@ export default function Dashboard() {
             </>
           ) : (
             <>
-              <div className="bg-white border border-orange-100 rounded-2xl p-6 shadow-lg">
+              <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-gray-600 font-medium">Événements</span>
-                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl flex items-center justify-center text-white text-xl">
+                  <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-2xl">
                     🎉
                   </div>
                 </div>
                 <p className="text-3xl font-bold text-gray-900">0</p>
                 <p className="text-sm text-gray-500 mt-1">En cours</p>
               </div>
-              <div className="bg-white border border-orange-100 rounded-2xl p-6 shadow-lg">
+              <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-gray-600 font-medium">Demandes</span>
-                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl flex items-center justify-center text-white text-xl">
+                  <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-2xl">
                     📤
                   </div>
                 </div>
                 <p className="text-3xl font-bold text-gray-900">0</p>
                 <p className="text-sm text-gray-500 mt-1">Envoyées</p>
               </div>
-              <div className="bg-white border border-orange-100 rounded-2xl p-6 shadow-lg">
+              <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-gray-600 font-medium">Favoris</span>
-                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl flex items-center justify-center text-white text-xl">
+                  <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-2xl">
                     ❤️
                   </div>
                 </div>
@@ -198,7 +198,7 @@ export default function Dashboard() {
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Activité récente</h2>
 
               <div className="space-y-4">
-                <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border border-orange-100">
+                <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
                   <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-600 rounded-full flex items-center justify-center text-white flex-shrink-0">
                     🎯
                   </div>
@@ -214,16 +214,16 @@ export default function Dashboard() {
           {/* Right Column - 1/3 width */}
           <div className="space-y-6">
             {/* Quick Actions */}
-            <div className="bg-white border border-orange-100 rounded-2xl p-6 shadow-lg">
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Actions rapides</h2>
               <div className="space-y-3">
-                <button className="w-full text-left px-4 py-3 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border border-orange-100 hover:border-orange-300 transition-all">
+                <button className="w-full text-left px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-all">
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">💬</span>
                     <span className="font-semibold text-gray-900">Mes messages</span>
                   </div>
                 </button>
-                <button className="w-full text-left px-4 py-3 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border border-orange-100 hover:border-orange-300 transition-all">
+                <button className="w-full text-left px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-all">
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">🔍</span>
                     <span className="font-semibold text-gray-900">
@@ -231,7 +231,7 @@ export default function Dashboard() {
                     </span>
                   </div>
                 </button>
-                <button className="w-full text-left px-4 py-3 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border border-orange-100 hover:border-orange-300 transition-all">
+                <button className="w-full text-left px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-all">
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">⚙️</span>
                     <span className="font-semibold text-gray-900">Paramètres</span>
