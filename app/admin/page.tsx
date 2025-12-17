@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 
 interface User {
-  id: string
+  user_id: string
   email: string
   first_name: string | null
   last_name: string | null
@@ -298,7 +298,7 @@ export default function AdminPage() {
                 </thead>
                 <tbody className="divide-y divide-neutral-100">
                   {users.map((user) => (
-                    <tr key={user.id} className="hover:bg-neutral-50 transition-colors">
+                    <tr key={user.user_id} className="hover:bg-neutral-50 transition-colors">
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 bg-neutral-200 rounded-full flex items-center justify-center text-neutral-600 font-semibold text-sm">
@@ -319,8 +319,8 @@ export default function AdminPage() {
                       <td className="px-4 py-4">
                         <select
                           value={user.role}
-                          onChange={(e) => handleUpdateRole(user.id, e.target.value)}
-                          disabled={actionLoading === user.id}
+                          onChange={(e) => handleUpdateRole(user.user_id, e.target.value)}
+                          disabled={actionLoading === user.user_id}
                           className={`px-3 py-1.5 rounded-lg text-xs font-medium border-0 cursor-pointer focus:ring-2 focus:ring-violet-500 ${
                             user.role === 'prestataire'
                               ? 'bg-emerald-100 text-emerald-700'
@@ -333,8 +333,8 @@ export default function AdminPage() {
                       </td>
                       <td className="px-4 py-4">
                         <button
-                          onClick={() => handleToggleAdmin(user.id, user.is_admin)}
-                          disabled={actionLoading === user.id}
+                          onClick={() => handleToggleAdmin(user.user_id, user.is_admin)}
+                          disabled={actionLoading === user.user_id}
                           className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                             user.is_admin
                               ? 'bg-violet-100 text-violet-700 hover:bg-violet-200'
@@ -349,12 +349,12 @@ export default function AdminPage() {
                       </td>
                       <td className="px-4 py-4 text-right">
                         <button
-                          onClick={() => handleDeleteUser(user.id, user.email)}
-                          disabled={actionLoading === user.id}
+                          onClick={() => handleDeleteUser(user.user_id, user.email)}
+                          disabled={actionLoading === user.user_id}
                           className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
                           title="Supprimer"
                         >
-                          {actionLoading === user.id ? (
+                          {actionLoading === user.user_id ? (
                             <div className="w-4 h-4 border-2 border-red-300 border-t-red-500 rounded-full animate-spin"></div>
                           ) : (
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

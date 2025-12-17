@@ -5,13 +5,16 @@
 -- 1. FONCTION: LISTER TOUS LES UTILISATEURS (ADMIN)
 -- ========================================
 
+-- D'abord supprimer l'ancienne fonction si elle existe
+DROP FUNCTION IF EXISTS public.admin_get_all_users(TEXT, INT, INT);
+
 CREATE OR REPLACE FUNCTION public.admin_get_all_users(
   p_search TEXT DEFAULT NULL,
   p_limit INT DEFAULT 50,
   p_offset INT DEFAULT 0
 )
 RETURNS TABLE (
-  id UUID,
+  user_id UUID,
   email TEXT,
   first_name TEXT,
   last_name TEXT,
@@ -25,19 +28,19 @@ BEGIN
   -- Vérifier que l'utilisateur est admin
   IF NOT EXISTS (
     SELECT 1 FROM public.user_roles 
-    WHERE user_id = auth.uid() AND is_admin = true
+    WHERE public.user_roles.user_id = auth.uid() AND public.user_roles.is_admin = true
   ) THEN
     RAISE EXCEPTION 'Accès refusé: vous devez être administrateur';
   END IF;
 
   RETURN QUERY
   SELECT
-    au.id,
-    au.email::TEXT,
-    (au.raw_user_meta_data->>'first_name')::TEXT as first_name,
-    (au.raw_user_meta_data->>'last_name')::TEXT as last_name,
-    us.phone::TEXT,
-    us.city::TEXT,
+    au.id as user_id,
+    au.email::TEXT as email,
+    COALESCE(au.raw_user_meta_data->>'first_name', '')::TEXT as first_name,
+    COALESCE(au.raw_user_meta_data->>'last_name', '')::TEXT as last_name,
+    COALESCE(us.phone, '')::TEXT as phone,
+    COALESCE(us.city, '')::TEXT as city,
     COALESCE(ur.role, 'client')::TEXT as role,
     COALESCE(ur.is_admin, false) as is_admin,
     au.created_at
@@ -46,10 +49,11 @@ BEGIN
   LEFT JOIN public.user_roles ur ON ur.user_id = au.id
   WHERE (
     p_search IS NULL 
+    OR p_search = ''
     OR au.email ILIKE '%' || p_search || '%'
-    OR (au.raw_user_meta_data->>'first_name') ILIKE '%' || p_search || '%'
-    OR (au.raw_user_meta_data->>'last_name') ILIKE '%' || p_search || '%'
-    OR us.city ILIKE '%' || p_search || '%'
+    OR COALESCE(au.raw_user_meta_data->>'first_name', '') ILIKE '%' || p_search || '%'
+    OR COALESCE(au.raw_user_meta_data->>'last_name', '') ILIKE '%' || p_search || '%'
+    OR COALESCE(us.city, '') ILIKE '%' || p_search || '%'
   )
   ORDER BY au.created_at DESC
   LIMIT p_limit
