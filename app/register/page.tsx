@@ -16,8 +16,11 @@ export default function Register() {
   const [password, setPassword] = useState('')
   
   // Étape 2 - Infos complémentaires
+  const [phoneCountryCode, setPhoneCountryCode] = useState('+33')
   const [phone, setPhone] = useState('')
+  const [address, setAddress] = useState('')
   const [city, setCity] = useState('')
+  const [postalCode, setPostalCode] = useState('')
   
   // Étape 3 - Pour prestataires uniquement
   const [companyName, setCompanyName] = useState('')
@@ -49,7 +52,7 @@ export default function Register() {
       return firstName && lastName && email && password.length >= 6
     }
     if (step === 2) {
-      return phone && city
+      return phone && address && city && postalCode
     }
     if (step === 3) {
       return companyName && serviceCategory
@@ -69,8 +72,6 @@ export default function Register() {
           data: {
             first_name: firstName,
             last_name: lastName,
-            phone: phone,
-            city: city,
             role: userRole,
             company_name: userRole === 'prestataire' ? companyName : null,
             service_category: userRole === 'prestataire' ? serviceCategory : null,
@@ -82,6 +83,21 @@ export default function Register() {
       if (error) throw error
 
       if (data.user) {
+        // Sauvegarder les données dans user_settings
+        const { error: settingsError } = await supabase
+          .from('user_settings')
+          .insert({
+            user_id: data.user.id,
+            phone: `${phoneCountryCode}${phone}`,
+            address: address,
+            city: city,
+            postal_code: postalCode,
+          })
+
+        if (settingsError) {
+          console.error('Erreur lors de la sauvegarde des paramètres:', settingsError)
+        }
+
         alert('Inscription réussie ! Veuillez vérifier votre email pour confirmer votre compte.')
         router.push('/login')
       }
@@ -114,20 +130,16 @@ export default function Register() {
       </div>
 
       <div className="w-full max-w-[440px] relative">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-stone-500 hover:text-stone-900 transition-colors mb-8 text-sm"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
-          </svg>
-          <span>Retour</span>
-        </Link>
-
         <div className="bg-white/80 backdrop-blur-xl border border-stone-200/60 rounded-3xl p-8 shadow-lg">
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <div className="w-9 h-9 bg-stone-900 rounded-xl flex items-center justify-center">
-              <span className="text-white text-sm font-bold">P</span>
+          <div className="text-center mb-6">
+            <p className="text-stone-500 text-sm mb-4">
+              Étape {step} sur {totalSteps}
+            </p>
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-9 h-9 bg-stone-900 rounded-xl flex items-center justify-center">
+                <span className="text-white text-sm font-bold">P</span>
+              </div>
+              <span className="text-xl font-bold text-stone-900">PrestaBase</span>
             </div>
           </div>
 
@@ -262,28 +274,68 @@ export default function Register() {
 
               <div>
                 <label htmlFor="phone" className="block text-xs font-medium text-stone-500 mb-1.5 uppercase tracking-wide">Téléphone</label>
-                <input
-                  id="phone"
-                  type="tel"
-                  required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent transition-all text-sm"
-                  placeholder="06 12 34 56 78"
-                />
+                <div className="flex gap-2">
+                  <select
+                    value={phoneCountryCode}
+                    onChange={(e) => setPhoneCountryCode(e.target.value)}
+                    className="w-24 px-3 py-3 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent transition-all text-sm appearance-none cursor-pointer"
+                  >
+                    <option value="+33">🇫🇷 +33</option>
+                    <option value="+32">🇧🇪 +32</option>
+                    <option value="+41">🇨🇭 +41</option>
+                    <option value="+1">🇺🇸 +1</option>
+                    <option value="+44">🇬🇧 +44</option>
+                  </select>
+                  <input
+                    id="phone"
+                    type="tel"
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="flex-1 px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent transition-all text-sm"
+                    placeholder="6 12 34 56 78"
+                  />
+                </div>
               </div>
 
               <div>
-                <label htmlFor="city" className="block text-xs font-medium text-stone-500 mb-1.5 uppercase tracking-wide">Ville</label>
+                <label htmlFor="address" className="block text-xs font-medium text-stone-500 mb-1.5 uppercase tracking-wide">Adresse complète</label>
                 <input
-                  id="city"
+                  id="address"
                   type="text"
                   required
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
                   className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent transition-all text-sm"
-                  placeholder="Paris"
+                  placeholder="12 rue de la Paix"
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="postalCode" className="block text-xs font-medium text-stone-500 mb-1.5 uppercase tracking-wide">Code postal</label>
+                  <input
+                    id="postalCode"
+                    type="text"
+                    required
+                    value={postalCode}
+                    onChange={(e) => setPostalCode(e.target.value)}
+                    className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent transition-all text-sm"
+                    placeholder="75001"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="city" className="block text-xs font-medium text-stone-500 mb-1.5 uppercase tracking-wide">Ville</label>
+                  <input
+                    id="city"
+                    type="text"
+                    required
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent transition-all text-sm"
+                    placeholder="Paris"
+                  />
+                </div>
               </div>
 
               {userRole === 'client' && (
@@ -415,9 +467,15 @@ export default function Register() {
           </div>
         </div>
 
-        <p className="text-center text-xs text-stone-400 mt-4">
-          Étape {step} sur {totalSteps}
-        </p>
+        <Link
+          href="/"
+          className="inline-flex items-center justify-center gap-2 text-stone-500 hover:text-stone-900 transition-colors mt-6 text-sm w-full"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
+          </svg>
+          <span>Revenir à l'accueil</span>
+        </Link>
       </div>
     </div>
   )
