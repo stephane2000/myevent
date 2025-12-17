@@ -220,81 +220,85 @@ export default function Parametres() {
     }
   }
 
+  // Toggle switch component
+  const Toggle = ({ enabled, onChange }: { enabled: boolean; onChange: () => void }) => (
+    <button
+      onClick={onChange}
+      className={`relative w-12 h-7 rounded-full transition-colors ${
+        enabled ? 'bg-neutral-900' : 'bg-neutral-200'
+      }`}
+    >
+      <span
+        className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-sm transition-transform ${
+          enabled ? 'translate-x-5' : 'translate-x-0'
+        }`}
+      />
+    </button>
+  )
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-white flex items-center justify-center">
-        <div className="text-xl text-gray-600">Chargement...</div>
+      <div className="min-h-screen bg-[#fafafa] flex items-center justify-center">
+        <div className="flex items-center gap-3">
+          <div className="w-5 h-5 border-2 border-neutral-300 border-t-neutral-900 rounded-full animate-spin"></div>
+          <span className="text-neutral-500">Chargement...</span>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-white">
+    <div className="min-h-screen bg-[#fafafa]">
       <Navbar />
 
-      <main className="max-w-6xl mx-auto px-6 py-24">
+      <main className="max-w-5xl mx-auto px-6 py-24">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Paramètres</h1>
-          <p className="text-gray-600">Gérez vos informations personnelles et vos préférences</p>
+          <h1 className="text-3xl font-semibold text-neutral-900 mb-1">Paramètres</h1>
+          <p className="text-neutral-500 text-sm">Gérez vos informations et préférences</p>
         </div>
 
         {/* Message de confirmation/erreur */}
         {message && (
           <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${
             message.type === 'success'
-              ? 'bg-green-50 border border-green-200 text-green-800'
-              : 'bg-red-50 border border-red-200 text-red-800'
+              ? 'bg-green-50 border border-green-100 text-green-700'
+              : 'bg-red-50 border border-red-100 text-red-700'
           }`}>
-            <span className="text-xl">{message.type === 'success' ? '✓' : '✕'}</span>
-            <span>{message.text}</span>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {message.type === 'success' ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              )}
+            </svg>
+            <span className="text-sm">{message.text}</span>
           </div>
         )}
 
-        <div className="grid lg:grid-cols-4 gap-8">
+        <div className="grid lg:grid-cols-4 gap-6">
           {/* Sidebar Navigation */}
           <div className="lg:col-span-1">
-            <nav className="bg-white border border-gray-200 rounded-2xl p-2 sticky top-24">
-              <button
-                onClick={() => setActiveTab('profile')}
-                className={`w-full text-left px-4 py-3 rounded-xl font-semibold transition-all mb-1 ${
-                  activeTab === 'profile'
-                    ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                👤 Profil
-              </button>
-              <button
-                onClick={() => setActiveTab('notifications')}
-                className={`w-full text-left px-4 py-3 rounded-xl font-semibold transition-all mb-1 ${
-                  activeTab === 'notifications'
-                    ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                🔔 Notifications
-              </button>
-              <button
-                onClick={() => setActiveTab('privacy')}
-                className={`w-full text-left px-4 py-3 rounded-xl font-semibold transition-all mb-1 ${
-                  activeTab === 'privacy'
-                    ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                🔒 Confidentialité
-              </button>
-              <button
-                onClick={() => setActiveTab('security')}
-                className={`w-full text-left px-4 py-3 rounded-xl font-semibold transition-all ${
-                  activeTab === 'security'
-                    ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                🛡️ Sécurité
-              </button>
+            <nav className="bg-white border border-neutral-100 rounded-2xl p-1.5 sticky top-24">
+              {[
+                { id: 'profile', icon: '👤', label: 'Profil' },
+                { id: 'notifications', icon: '🔔', label: 'Notifications' },
+                { id: 'privacy', icon: '🔒', label: 'Confidentialité' },
+                { id: 'security', icon: '🛡️', label: 'Sécurité' }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-all mb-0.5 last:mb-0 ${
+                    activeTab === tab.id
+                      ? 'bg-neutral-900 text-white'
+                      : 'text-neutral-600 hover:bg-neutral-50'
+                  }`}
+                >
+                  <span className="mr-2">{tab.icon}</span>
+                  {tab.label}
+                </button>
+              ))}
             </nav>
           </div>
 
@@ -302,123 +306,120 @@ export default function Parametres() {
           <div className="lg:col-span-3">
             {/* Profile Tab */}
             {activeTab === 'profile' && (
-              <div className="bg-white border border-gray-200 rounded-2xl p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Informations personnelles</h2>
+              <div className="bg-white border border-neutral-100 rounded-2xl p-6 md:p-8">
+                <h2 className="text-xl font-semibold text-neutral-900 mb-1">Informations personnelles</h2>
+                <p className="text-neutral-500 text-sm mb-6">Mettez à jour vos informations de profil</p>
 
-                <div className="space-y-6">
-                  <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-5">
+                  <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Prénom</label>
+                      <label className="block text-xs font-medium text-neutral-500 mb-1.5 uppercase tracking-wide">Prénom</label>
                       <input
                         type="text"
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
-                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent text-sm"
                         placeholder="Votre prénom"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Nom</label>
+                      <label className="block text-xs font-medium text-neutral-500 mb-1.5 uppercase tracking-wide">Nom</label>
                       <input
                         type="text"
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
-                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent text-sm"
                         placeholder="Votre nom"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                    <label className="block text-xs font-medium text-neutral-500 mb-1.5 uppercase tracking-wide">Email</label>
                     <input
                       type="email"
                       value={user?.email || ''}
                       disabled
-                      className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 cursor-not-allowed"
+                      className="w-full px-4 py-3 bg-neutral-100 border border-neutral-200 rounded-xl text-neutral-400 cursor-not-allowed text-sm"
                     />
-                    <p className="text-xs text-gray-500 mt-1">L'email ne peut pas être modifié</p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Téléphone</label>
-                    <div className="flex gap-3">
+                    <label className="block text-xs font-medium text-neutral-500 mb-1.5 uppercase tracking-wide">Téléphone</label>
+                    <div className="flex gap-2">
                       <select
                         value={phoneCountry}
                         onChange={(e) => setPhoneCountry(e.target.value)}
-                        className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        className="px-3 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-900 text-sm"
                       >
                         <option value="+33">🇫🇷 +33</option>
                         <option value="+32">🇧🇪 +32</option>
                         <option value="+41">🇨🇭 +41</option>
                         <option value="+1">🇺🇸 +1</option>
                         <option value="+44">🇬🇧 +44</option>
-                        <option value="+49">🇩🇪 +49</option>
-                        <option value="+34">🇪🇸 +34</option>
-                        <option value="+39">🇮🇹 +39</option>
                       </select>
                       <input
                         type="tel"
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
                         placeholder="6 12 34 56 78"
-                        className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        className="flex-1 px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-900 text-sm"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Adresse</label>
+                    <label className="block text-xs font-medium text-neutral-500 mb-1.5 uppercase tracking-wide">Adresse</label>
                     <input
                       type="text"
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       placeholder="123 rue de la Paix"
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-900 text-sm"
                     />
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Ville</label>
+                      <label className="block text-xs font-medium text-neutral-500 mb-1.5 uppercase tracking-wide">Ville</label>
                       <input
                         type="text"
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
                         placeholder="Paris"
-                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-900 text-sm"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Code postal</label>
+                      <label className="block text-xs font-medium text-neutral-500 mb-1.5 uppercase tracking-wide">Code postal</label>
                       <input
                         type="text"
                         value={postalCode}
                         onChange={(e) => setPostalCode(e.target.value)}
                         placeholder="75001"
-                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-900 text-sm"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Biographie</label>
+                    <label className="block text-xs font-medium text-neutral-500 mb-1.5 uppercase tracking-wide">Biographie</label>
                     <textarea
                       value={bio}
                       onChange={(e) => setBio(e.target.value)}
                       rows={4}
                       placeholder="Parlez-nous de vous..."
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                      className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-900 resize-none text-sm"
                     />
                   </div>
 
-                  <div className="pt-4">
+                  <div className="pt-2">
                     <button
                       onClick={handleSaveProfile}
                       disabled={saving}
-                      className="px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-amber-700 transition-all disabled:opacity-50"
+                      className="px-6 py-3 bg-neutral-900 text-white rounded-xl text-sm font-medium hover:bg-neutral-800 transition-all disabled:opacity-50"
                     >
-                      {saving ? 'Enregistrement...' : 'Sauvegarder les modifications'}
+                      {saving ? 'Enregistrement...' : 'Sauvegarder'}
                     </button>
                   </div>
                 </div>
@@ -427,81 +428,54 @@ export default function Parametres() {
 
             {/* Notifications Tab */}
             {activeTab === 'notifications' && (
-              <div className="bg-white border border-gray-200 rounded-2xl p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Notifications</h2>
-                <p className="text-gray-600 mb-6">Choisissez comment vous souhaitez être notifié</p>
+              <div className="bg-white border border-neutral-100 rounded-2xl p-6 md:p-8">
+                <h2 className="text-xl font-semibold text-neutral-900 mb-1">Notifications</h2>
+                <p className="text-neutral-500 text-sm mb-6">Gérez vos préférences de notification</p>
 
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-5 bg-gray-50 rounded-xl border border-gray-200 hover:border-gray-300 transition-colors">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-4 bg-neutral-50 rounded-xl">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl flex items-center justify-center text-white text-xl">
-                        📧
+                      <div className="w-10 h-10 bg-white border border-neutral-200 rounded-xl flex items-center justify-center">
+                        <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
                       </div>
                       <div>
-                        <p className="font-semibold text-gray-900">Notifications par email</p>
-                        <p className="text-sm text-gray-600">Messages, demandes et activités importantes</p>
+                        <p className="font-medium text-neutral-900 text-sm">Notifications par email</p>
+                        <p className="text-xs text-neutral-500">Messages et activités importantes</p>
                       </div>
                     </div>
-                    <button
-                      onClick={() => setEmailNotifications(!emailNotifications)}
-                      className={`relative w-14 h-8 rounded-full transition-colors ${
-                        emailNotifications ? 'bg-gradient-to-r from-orange-500 to-amber-600' : 'bg-gray-300'
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${
-                          emailNotifications ? 'translate-x-6' : 'translate-x-0'
-                        }`}
-                      />
-                    </button>
+                    <Toggle enabled={emailNotifications} onChange={() => setEmailNotifications(!emailNotifications)} />
                   </div>
 
-                  <div className="flex items-center justify-between p-5 bg-gray-50 rounded-xl border border-gray-200 hover:border-gray-300 transition-colors">
+                  <div className="flex items-center justify-between p-4 bg-neutral-50 rounded-xl">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl flex items-center justify-center text-white text-xl">
-                        💬
+                      <div className="w-10 h-10 bg-white border border-neutral-200 rounded-xl flex items-center justify-center">
+                        <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
                       </div>
                       <div>
-                        <p className="font-semibold text-gray-900">Notifications SMS</p>
-                        <p className="text-sm text-gray-600">Alertes urgentes et confirmations</p>
+                        <p className="font-medium text-neutral-900 text-sm">Notifications SMS</p>
+                        <p className="text-xs text-neutral-500">Alertes urgentes uniquement</p>
                       </div>
                     </div>
-                    <button
-                      onClick={() => setSmsNotifications(!smsNotifications)}
-                      className={`relative w-14 h-8 rounded-full transition-colors ${
-                        smsNotifications ? 'bg-gradient-to-r from-orange-500 to-amber-600' : 'bg-gray-300'
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${
-                          smsNotifications ? 'translate-x-6' : 'translate-x-0'
-                        }`}
-                      />
-                    </button>
+                    <Toggle enabled={smsNotifications} onChange={() => setSmsNotifications(!smsNotifications)} />
                   </div>
 
-                  <div className="flex items-center justify-between p-5 bg-gray-50 rounded-xl border border-gray-200 hover:border-gray-300 transition-colors">
+                  <div className="flex items-center justify-between p-4 bg-neutral-50 rounded-xl">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl flex items-center justify-center text-white text-xl">
-                        🎯
+                      <div className="w-10 h-10 bg-white border border-neutral-200 rounded-xl flex items-center justify-center">
+                        <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                        </svg>
                       </div>
                       <div>
-                        <p className="font-semibold text-gray-900">Emails marketing</p>
-                        <p className="text-sm text-gray-600">Offres spéciales et nouveautés</p>
+                        <p className="font-medium text-neutral-900 text-sm">Emails marketing</p>
+                        <p className="text-xs text-neutral-500">Offres et nouveautés</p>
                       </div>
                     </div>
-                    <button
-                      onClick={() => setMarketingEmails(!marketingEmails)}
-                      className={`relative w-14 h-8 rounded-full transition-colors ${
-                        marketingEmails ? 'bg-gradient-to-r from-orange-500 to-amber-600' : 'bg-gray-300'
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${
-                          marketingEmails ? 'translate-x-6' : 'translate-x-0'
-                        }`}
-                      />
-                    </button>
+                    <Toggle enabled={marketingEmails} onChange={() => setMarketingEmails(!marketingEmails)} />
                   </div>
                 </div>
 
@@ -509,9 +483,9 @@ export default function Parametres() {
                   <button
                     onClick={handleSaveNotifications}
                     disabled={saving}
-                    className="px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-amber-700 transition-all disabled:opacity-50"
+                    className="px-6 py-3 bg-neutral-900 text-white rounded-xl text-sm font-medium hover:bg-neutral-800 transition-all disabled:opacity-50"
                   >
-                    {saving ? 'Enregistrement...' : 'Sauvegarder les préférences'}
+                    {saving ? 'Enregistrement...' : 'Sauvegarder'}
                   </button>
                 </div>
               </div>
@@ -519,123 +493,67 @@ export default function Parametres() {
 
             {/* Privacy Tab */}
             {activeTab === 'privacy' && (
-              <div className="bg-white border border-gray-200 rounded-2xl p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Confidentialité</h2>
-                <p className="text-gray-600 mb-6">Contrôlez qui peut voir vos informations</p>
+              <div className="bg-white border border-neutral-100 rounded-2xl p-6 md:p-8">
+                <h2 className="text-xl font-semibold text-neutral-900 mb-1">Confidentialité</h2>
+                <p className="text-neutral-500 text-sm mb-6">Contrôlez la visibilité de vos informations</p>
 
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">Visibilité du profil</label>
-                    <div className="grid gap-3">
-                      <button
-                        onClick={() => setProfileVisibility('public')}
-                        className={`p-4 rounded-xl border-2 text-left transition-all ${
-                          profileVisibility === 'public'
-                            ? 'border-orange-500 bg-orange-50'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-600 rounded-lg flex items-center justify-center text-white">
-                            🌍
+                    <label className="block text-xs font-medium text-neutral-500 mb-3 uppercase tracking-wide">Visibilité du profil</label>
+                    <div className="space-y-2">
+                      {[
+                        { id: 'public', icon: '🌍', label: 'Public', desc: 'Visible par tous' },
+                        { id: 'contacts', icon: '👥', label: 'Contacts', desc: 'Contacts uniquement' },
+                        { id: 'private', icon: '🔒', label: 'Privé', desc: 'Vous uniquement' }
+                      ].map((option) => (
+                        <button
+                          key={option.id}
+                          onClick={() => setProfileVisibility(option.id as any)}
+                          className={`w-full p-4 rounded-xl border text-left transition-all ${
+                            profileVisibility === option.id
+                              ? 'border-neutral-900 bg-neutral-50'
+                              : 'border-neutral-200 hover:border-neutral-300'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg">{option.icon}</span>
+                            <div>
+                              <p className="font-medium text-neutral-900 text-sm">{option.label}</p>
+                              <p className="text-xs text-neutral-500">{option.desc}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-semibold text-gray-900">Public</p>
-                            <p className="text-sm text-gray-600">Visible par tous les utilisateurs</p>
-                          </div>
-                        </div>
-                      </button>
-
-                      <button
-                        onClick={() => setProfileVisibility('contacts')}
-                        className={`p-4 rounded-xl border-2 text-left transition-all ${
-                          profileVisibility === 'contacts'
-                            ? 'border-orange-500 bg-orange-50'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-600 rounded-lg flex items-center justify-center text-white">
-                            👥
-                          </div>
-                          <div>
-                            <p className="font-semibold text-gray-900">Contacts uniquement</p>
-                            <p className="text-sm text-gray-600">Visible par vos contacts seulement</p>
-                          </div>
-                        </div>
-                      </button>
-
-                      <button
-                        onClick={() => setProfileVisibility('private')}
-                        className={`p-4 rounded-xl border-2 text-left transition-all ${
-                          profileVisibility === 'private'
-                            ? 'border-orange-500 bg-orange-50'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-600 rounded-lg flex items-center justify-center text-white">
-                            🔒
-                          </div>
-                          <div>
-                            <p className="font-semibold text-gray-900">Privé</p>
-                            <p className="text-sm text-gray-600">Visible uniquement par vous</p>
-                          </div>
-                        </div>
-                      </button>
+                        </button>
+                      ))}
                     </div>
                   </div>
 
-                  <div className="border-t border-gray-200 pt-6">
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">Informations publiques</label>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                  <div className="border-t border-neutral-100 pt-6">
+                    <label className="block text-xs font-medium text-neutral-500 mb-3 uppercase tracking-wide">Informations publiques</label>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between p-4 bg-neutral-50 rounded-xl">
                         <div>
-                          <p className="font-semibold text-gray-900">Afficher mon email</p>
-                          <p className="text-sm text-gray-600">Visible sur votre profil public</p>
+                          <p className="font-medium text-neutral-900 text-sm">Afficher mon email</p>
+                          <p className="text-xs text-neutral-500">Sur votre profil public</p>
                         </div>
-                        <button
-                          onClick={() => setShowEmail(!showEmail)}
-                          className={`relative w-14 h-8 rounded-full transition-colors ${
-                            showEmail ? 'bg-gradient-to-r from-orange-500 to-amber-600' : 'bg-gray-300'
-                          }`}
-                        >
-                          <span
-                            className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${
-                              showEmail ? 'translate-x-6' : 'translate-x-0'
-                            }`}
-                          />
-                        </button>
+                        <Toggle enabled={showEmail} onChange={() => setShowEmail(!showEmail)} />
                       </div>
-
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                      <div className="flex items-center justify-between p-4 bg-neutral-50 rounded-xl">
                         <div>
-                          <p className="font-semibold text-gray-900">Afficher mon téléphone</p>
-                          <p className="text-sm text-gray-600">Visible sur votre profil public</p>
+                          <p className="font-medium text-neutral-900 text-sm">Afficher mon téléphone</p>
+                          <p className="text-xs text-neutral-500">Sur votre profil public</p>
                         </div>
-                        <button
-                          onClick={() => setShowPhone(!showPhone)}
-                          className={`relative w-14 h-8 rounded-full transition-colors ${
-                            showPhone ? 'bg-gradient-to-r from-orange-500 to-amber-600' : 'bg-gray-300'
-                          }`}
-                        >
-                          <span
-                            className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${
-                              showPhone ? 'translate-x-6' : 'translate-x-0'
-                            }`}
-                          />
-                        </button>
+                        <Toggle enabled={showPhone} onChange={() => setShowPhone(!showPhone)} />
                       </div>
                     </div>
                   </div>
 
-                  <div className="pt-4">
+                  <div className="pt-2">
                     <button
                       onClick={handleSavePrivacy}
                       disabled={saving}
-                      className="px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-amber-700 transition-all disabled:opacity-50"
+                      className="px-6 py-3 bg-neutral-900 text-white rounded-xl text-sm font-medium hover:bg-neutral-800 transition-all disabled:opacity-50"
                     >
-                      {saving ? 'Enregistrement...' : 'Sauvegarder les paramètres'}
+                      {saving ? 'Enregistrement...' : 'Sauvegarder'}
                     </button>
                   </div>
                 </div>
@@ -645,58 +563,60 @@ export default function Parametres() {
             {/* Security Tab */}
             {activeTab === 'security' && (
               <div className="space-y-6">
-                <div className="bg-white border border-gray-200 rounded-2xl p-8">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Mot de passe</h2>
-                  <p className="text-gray-600 mb-6">Modifiez votre mot de passe</p>
+                <div className="bg-white border border-neutral-100 rounded-2xl p-6 md:p-8">
+                  <h2 className="text-xl font-semibold text-neutral-900 mb-1">Mot de passe</h2>
+                  <p className="text-neutral-500 text-sm mb-6">Modifiez votre mot de passe</p>
 
                   <form onSubmit={(e) => { e.preventDefault(); handleChangePassword(); }} className="space-y-4">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Nouveau mot de passe</label>
+                      <label className="block text-xs font-medium text-neutral-500 mb-1.5 uppercase tracking-wide">Nouveau mot de passe</label>
                       <input
                         type="password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="••••••••"
                         autoComplete="new-password"
-                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-900 text-sm"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Confirmer le mot de passe</label>
+                      <label className="block text-xs font-medium text-neutral-500 mb-1.5 uppercase tracking-wide">Confirmer</label>
                       <input
                         type="password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="••••••••"
                         autoComplete="new-password"
-                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-900 text-sm"
                       />
                     </div>
                     <button
                       type="submit"
                       disabled={saving || !newPassword || !confirmPassword}
-                      className="px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-amber-700 transition-all disabled:opacity-50"
+                      className="px-6 py-3 bg-neutral-900 text-white rounded-xl text-sm font-medium hover:bg-neutral-800 transition-all disabled:opacity-50"
                     >
                       {saving ? 'Modification...' : 'Changer le mot de passe'}
                     </button>
                   </form>
                 </div>
 
-                <div className="bg-white border-2 border-red-200 rounded-2xl p-8">
-                  <h2 className="text-2xl font-bold text-red-600 mb-2">Zone dangereuse</h2>
-                  <p className="text-gray-600 mb-6">Actions irréversibles sur votre compte</p>
+                <div className="bg-white border border-red-100 rounded-2xl p-6 md:p-8">
+                  <h2 className="text-xl font-semibold text-red-600 mb-1">Zone dangereuse</h2>
+                  <p className="text-neutral-500 text-sm mb-6">Actions irréversibles</p>
 
-                  <div className="p-5 bg-red-50 rounded-xl border border-red-200">
+                  <div className="p-4 bg-red-50 rounded-xl">
                     <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center text-white text-xl flex-shrink-0">
-                        ⚠️
+                      <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
                       </div>
                       <div className="flex-1">
-                        <p className="font-semibold text-gray-900 mb-2">Supprimer mon compte</p>
-                        <p className="text-sm text-gray-600 mb-4">
-                          Cette action est définitive. Toutes vos données seront supprimées et ne pourront pas être récupérées.
+                        <p className="font-medium text-neutral-900 text-sm mb-1">Supprimer mon compte</p>
+                        <p className="text-xs text-neutral-600 mb-3">
+                          Cette action est définitive et ne peut pas être annulée.
                         </p>
-                        <button className="px-5 py-2.5 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-all text-sm">
+                        <button className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-all">
                           Supprimer définitivement
                         </button>
                       </div>

@@ -36,42 +36,43 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-white flex items-center justify-center p-6">
+    <div className="min-h-screen bg-[#fafafa] flex items-center justify-center p-6">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-orange-200/40 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-amber-200/40 rounded-full blur-3xl"></div>
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-gradient-to-br from-neutral-100 to-transparent rounded-full blur-3xl opacity-60"></div>
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-gradient-to-tl from-neutral-100 to-transparent rounded-full blur-3xl opacity-60"></div>
       </div>
 
-      <div className="w-full max-w-md relative">
+      <div className="w-full max-w-[400px] relative">
         {/* Back to home */}
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-gray-600 hover:text-orange-600 transition-colors mb-8"
+          className="inline-flex items-center gap-2 text-neutral-500 hover:text-neutral-900 transition-colors mb-8 text-sm"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
           </svg>
-          <span>Retour à l'accueil</span>
+          <span>Retour</span>
         </Link>
 
-        <div className="bg-white border border-orange-100 rounded-2xl p-8 shadow-xl">
+        <div className="bg-white/80 backdrop-blur-xl border border-neutral-200/60 rounded-3xl p-8 shadow-apple-lg">
           {/* Logo */}
           <div className="flex items-center justify-center gap-2 mb-8">
-            <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-600 rounded-lg"></div>
-            <span className="text-2xl font-bold text-gray-900 tracking-tight">MyEvent</span>
+            <div className="w-9 h-9 bg-neutral-900 rounded-xl flex items-center justify-center">
+              <span className="text-white text-sm font-bold">M</span>
+            </div>
           </div>
 
-          <h1 className="text-3xl font-bold text-gray-900 text-center mb-2">
-            Connexion
+          <h1 className="text-2xl font-semibold text-neutral-900 text-center mb-1">
+            Bon retour
           </h1>
-          <p className="text-gray-600 text-center mb-8">
-            Accédez à votre espace personnel
+          <p className="text-neutral-500 text-center mb-8 text-sm">
+            Connectez-vous à votre compte
           </p>
 
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-xs font-medium text-neutral-500 mb-1.5 uppercase tracking-wide">
                 Email
               </label>
               <input
@@ -80,14 +81,14 @@ export default function Login() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-all text-sm"
                 placeholder="votre@email.com"
                 autoComplete="email"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-xs font-medium text-neutral-500 mb-1.5 uppercase tracking-wide">
                 Mot de passe
               </label>
               <input
@@ -96,14 +97,14 @@ export default function Login() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-all text-sm"
                 placeholder="••••••••"
                 autoComplete="current-password"
               />
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">
+              <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl text-sm">
                 {error}
               </div>
             )}
@@ -111,16 +112,16 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-amber-700 transition-all shadow-lg shadow-orange-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-neutral-900 text-white rounded-xl font-medium hover:bg-neutral-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm mt-2"
             >
               {loading ? 'Connexion...' : 'Se connecter'}
             </button>
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-gray-600 text-sm">
+            <p className="text-neutral-500 text-sm">
               Pas encore de compte ?{' '}
-              <Link href="/register" className="text-orange-600 hover:text-amber-600 font-semibold transition-colors">
+              <Link href="/register" className="text-neutral-900 font-medium hover:underline transition-colors">
                 Créer un compte
               </Link>
             </p>

@@ -45,86 +45,85 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-white flex items-center justify-center p-6">
+    <div className="min-h-screen bg-[#fafafa] flex items-center justify-center p-6">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-orange-200/40 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-amber-200/40 rounded-full blur-3xl"></div>
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-gradient-to-br from-neutral-100 to-transparent rounded-full blur-3xl opacity-60"></div>
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-gradient-to-tl from-neutral-100 to-transparent rounded-full blur-3xl opacity-60"></div>
       </div>
 
-      <div className="w-full max-w-md relative">
+      <div className="w-full max-w-[400px] relative">
         {/* Back to home */}
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-gray-600 hover:text-orange-600 transition-colors mb-8"
+          className="inline-flex items-center gap-2 text-neutral-500 hover:text-neutral-900 transition-colors mb-8 text-sm"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
           </svg>
-          <span>Retour à l'accueil</span>
+          <span>Retour</span>
         </Link>
 
-        <div className="bg-white border border-orange-100 rounded-2xl p-8 shadow-xl">
+        <div className="bg-white/80 backdrop-blur-xl border border-neutral-200/60 rounded-3xl p-8 shadow-apple-lg">
           {/* Logo */}
           <div className="flex items-center justify-center gap-2 mb-8">
-            <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-600 rounded-lg"></div>
-            <span className="text-2xl font-bold text-gray-900 tracking-tight">MyEvent</span>
+            <div className="w-9 h-9 bg-neutral-900 rounded-xl flex items-center justify-center">
+              <span className="text-white text-sm font-bold">M</span>
+            </div>
           </div>
 
-          <h1 className="text-3xl font-bold text-gray-900 text-center mb-2">
-            Inscription
+          <h1 className="text-2xl font-semibold text-neutral-900 text-center mb-1">
+            Créer un compte
           </h1>
-          <p className="text-gray-600 text-center mb-8">
-            Créez votre compte gratuitement
+          <p className="text-neutral-500 text-center mb-8 text-sm">
+            Rejoignez MyEvent gratuitement
           </p>
 
-          <form onSubmit={handleRegister} className="space-y-5">
+          <form onSubmit={handleRegister} className="space-y-4">
             {/* Choix du type de compte */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+              <label className="block text-xs font-medium text-neutral-500 mb-2 uppercase tracking-wide">
                 Type de compte
               </label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => setUserRole('client')}
-                  className={`p-4 rounded-xl border-2 transition-all ${
+                  className={`p-3 rounded-xl border transition-all text-center ${
                     userRole === 'client'
-                      ? 'border-orange-500 bg-orange-50 text-orange-700'
-                      : 'border-gray-200 bg-white text-gray-600 hover:border-orange-300'
+                      ? 'border-neutral-900 bg-neutral-900 text-white'
+                      : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300'
                   }`}
                 >
-                  <div className="flex flex-col items-center gap-2">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  <div className="flex flex-col items-center gap-1.5">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
-                    <span className="font-semibold">Client</span>
-                    <span className="text-xs text-center">Je recherche des prestataires</span>
+                    <span className="font-medium text-sm">Client</span>
                   </div>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setUserRole('prestataire')}
-                  className={`p-4 rounded-xl border-2 transition-all ${
+                  className={`p-3 rounded-xl border transition-all text-center ${
                     userRole === 'prestataire'
-                      ? 'border-orange-500 bg-orange-50 text-orange-700'
-                      : 'border-gray-200 bg-white text-gray-600 hover:border-orange-300'
+                      ? 'border-neutral-900 bg-neutral-900 text-white'
+                      : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300'
                   }`}
                 >
-                  <div className="flex flex-col items-center gap-2">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  <div className="flex flex-col items-center gap-1.5">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
-                    <span className="font-semibold">Prestataire</span>
-                    <span className="text-xs text-center">Je propose mes services</span>
+                    <span className="font-medium text-sm">Prestataire</span>
                   </div>
                 </button>
               </div>
             </div>
 
             <div>
-              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="firstName" className="block text-xs font-medium text-neutral-500 mb-1.5 uppercase tracking-wide">
                 Prénom
               </label>
               <input
@@ -133,13 +132,13 @@ export default function Register() {
                 required
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-all text-sm"
                 placeholder="Votre prénom"
               />
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-xs font-medium text-neutral-500 mb-1.5 uppercase tracking-wide">
                 Email
               </label>
               <input
@@ -148,14 +147,14 @@ export default function Register() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-all text-sm"
                 placeholder="votre@email.com"
                 autoComplete="email"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-xs font-medium text-neutral-500 mb-1.5 uppercase tracking-wide">
                 Mot de passe
               </label>
               <input
@@ -164,7 +163,7 @@ export default function Register() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-all text-sm"
                 placeholder="••••••••"
                 minLength={6}
                 autoComplete="new-password"
@@ -172,7 +171,7 @@ export default function Register() {
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">
+              <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl text-sm">
                 {error}
               </div>
             )}
@@ -180,16 +179,16 @@ export default function Register() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-amber-700 transition-all shadow-lg shadow-orange-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-neutral-900 text-white rounded-xl font-medium hover:bg-neutral-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm mt-2"
             >
               {loading ? 'Inscription...' : 'Créer mon compte'}
             </button>
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-gray-600 text-sm">
+            <p className="text-neutral-500 text-sm">
               Déjà un compte ?{' '}
-              <Link href="/login" className="text-orange-600 hover:text-amber-600 font-semibold transition-colors">
+              <Link href="/login" className="text-neutral-900 font-medium hover:underline transition-colors">
                 Se connecter
               </Link>
             </p>
