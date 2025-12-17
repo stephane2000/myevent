@@ -11,12 +11,80 @@ export default function Dashboard() {
   const [userRole, setUserRole] = useState<string>('client')
   const [isAdmin, setIsAdmin] = useState(false)
   const [userSettings, setUserSettings] = useState<any>(null)
+  const [activities, setActivities] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
     checkUser()
   }, [])
+
+  // Helper pour obtenir l'icône et la couleur selon le type d'activité
+  function getActivityIcon(actionType: string) {
+    switch (actionType) {
+      case 'account_created':
+        return {
+          icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />,
+          bgColor: 'bg-green-100',
+          iconColor: 'text-green-600'
+        }
+      case 'profile_updated':
+        return {
+          icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />,
+          bgColor: 'bg-blue-100',
+          iconColor: 'text-blue-600'
+        }
+      case 'password_changed':
+        return {
+          icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />,
+          bgColor: 'bg-orange-100',
+          iconColor: 'text-orange-600'
+        }
+      case 'message_received':
+      case 'message_sent':
+        return {
+          icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />,
+          bgColor: 'bg-purple-100',
+          iconColor: 'text-purple-600'
+        }
+      case 'listing_created':
+      case 'service_created':
+        return {
+          icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />,
+          bgColor: 'bg-teal-100',
+          iconColor: 'text-teal-600'
+        }
+      case 'listing_updated':
+      case 'service_updated':
+        return {
+          icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />,
+          bgColor: 'bg-indigo-100',
+          iconColor: 'text-indigo-600'
+        }
+      default:
+        return {
+          icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
+          bgColor: 'bg-neutral-100',
+          iconColor: 'text-neutral-600'
+        }
+    }
+  }
+
+  // Helper pour formater la date
+  function formatActivityDate(dateString: string) {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diff = now.getTime() - date.getTime()
+    const minutes = Math.floor(diff / 60000)
+    const hours = Math.floor(diff / 3600000)
+    const days = Math.floor(diff / 86400000)
+
+    if (minutes < 1) return 'À l\'instant'
+    if (minutes < 60) return `Il y a ${minutes} min`
+    if (hours < 24) return `Il y a ${hours}h`
+    if (days < 7) return `Il y a ${days}j`
+    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+  }
 
   async function checkUser() {
     const { data: { user } } = await supabase.auth.getUser()
@@ -48,6 +116,16 @@ export default function Dashboard() {
         console.error('Erreur lors de la récupération des paramètres:', settingsError)
       } else if (settingsData && settingsData.length > 0) {
         setUserSettings(settingsData[0])
+      }
+
+      // Récupérer l'historique d'activité
+      const { data: activityData, error: activityError } = await supabase
+        .rpc('get_user_activity', { p_limit: 10 })
+
+      if (activityError) {
+        console.error('Erreur lors de la récupération de l\'activité:', activityError)
+      } else if (activityData) {
+        setActivities(activityData)
       }
     }
     setLoading(false)
@@ -226,19 +304,35 @@ export default function Dashboard() {
             <div className="bg-white border border-neutral-100 rounded-2xl p-6">
               <h2 className="text-xl font-semibold text-neutral-900 mb-6">Activité récente</h2>
 
-              <div className="space-y-3">
-                <div className="flex items-start gap-4 p-4 bg-neutral-50 rounded-xl">
-                  <div className="w-9 h-9 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              {activities.length > 0 ? (
+                <div className="space-y-3">
+                  {activities.map((activity) => {
+                    const iconData = getActivityIcon(activity.action_type)
+                    return (
+                      <div key={activity.id} className="flex items-start gap-4 p-4 bg-neutral-50 rounded-xl">
+                        <div className={`w-9 h-9 ${iconData.bgColor} rounded-full flex items-center justify-center flex-shrink-0`}>
+                          <svg className={`w-4 h-4 ${iconData.iconColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            {iconData.icon}
+                          </svg>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-neutral-900 text-sm">{activity.action_description}</p>
+                          <p className="text-xs text-neutral-500 mt-0.5">{formatActivityDate(activity.created_at)}</p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <svg className="w-6 h-6 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
-                  <div>
-                    <p className="font-medium text-neutral-900 text-sm">Compte créé avec succès</p>
-                    <p className="text-xs text-neutral-500 mt-0.5">Bienvenue sur PrestaBase</p>
-                  </div>
+                  <p className="text-neutral-500 text-sm">Aucune activité récente</p>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 

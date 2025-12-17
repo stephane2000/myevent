@@ -23,6 +23,9 @@ export default function Parametres() {
   const [postalCode, setPostalCode] = useState('')
   const [bio, setBio] = useState('')
 
+  // Edit states for individual fields
+  const [editingField, setEditingField] = useState<string | null>(null)
+
   // Notification settings
   const [emailNotifications, setEmailNotifications] = useState(true)
   const [smsNotifications, setSmsNotifications] = useState(false)
@@ -89,41 +92,45 @@ export default function Parametres() {
     setLoading(false)
   }
 
-  async function handleSaveProfile() {
+  async function handleSaveField(field: string) {
     setSaving(true)
     setMessage(null)
 
     try {
-      // Mettre à jour les métadonnées auth (prénom, nom)
-      const { error: authError } = await supabase.auth.updateUser({
-        data: {
-          first_name: firstName,
-          last_name: lastName
-        }
-      })
-
-      if (authError) throw authError
-
-      // Formater le téléphone
-      const fullPhone = phoneNumber ? `${phoneCountry} ${phoneNumber}` : null
-
-      // Mettre à jour ou créer les paramètres
-      const { error: settingsError } = await supabase
-        .from('user_settings')
-        .upsert({
+      if (field === 'name') {
+        // Mettre à jour prénom et nom
+        const { error } = await supabase.auth.updateUser({
+          data: { first_name: firstName, last_name: lastName }
+        })
+        if (error) throw error
+      } else if (field === 'phone') {
+        const fullPhone = phoneNumber ? `${phoneCountry} ${phoneNumber}` : null
+        const { error } = await supabase.from('user_settings').upsert({
           user_id: user.id,
-          phone: fullPhone,
+          phone: fullPhone
+        }, { onConflict: 'user_id' })
+        if (error) throw error
+      } else if (field === 'address') {
+        const { error } = await supabase.from('user_settings').upsert({
+          user_id: user.id,
           address,
           city,
-          postal_code: postalCode,
-          bio
-        }, {
-          onConflict: 'user_id'
-        })
+          postal_code: postalCode
+        }, { onConflict: 'user_id' })
+        if (error) throw error
+      }
 
-      if (settingsError) throw settingsError
+      // Logger l'activité
+      await supabase.rpc('log_user_activity', {
+        p_action_type: 'profile_updated',
+        p_action_description: field === 'name' ? 'Nom et prénom mis à jour' :
+                             field === 'phone' ? 'Numéro de téléphone mis à jour' :
+                             'Adresse mise à jour',
+        p_metadata: { field }
+      })
 
-      setMessage({ type: 'success', text: 'Profil mis à jour avec succès!' })
+      setMessage({ type: 'success', text: 'Modification enregistrée!' })
+      setEditingField(null)
     } catch (error: any) {
       console.error('Erreur:', error)
       setMessage({ type: 'error', text: error.message || 'Erreur lors de la sauvegarde' })
@@ -208,6 +215,13 @@ export default function Parametres() {
       })
 
       if (error) throw error
+
+      // Logger l'activité
+      await supabase.rpc('log_user_activity', {
+        p_action_type: 'password_changed',
+        p_action_description: 'Mot de passe modifié',
+        p_metadata: {}
+      })
 
       setMessage({ type: 'success', text: 'Mot de passe modifié avec succès!' })
       setNewPassword('')
@@ -308,119 +322,189 @@ export default function Parametres() {
             {activeTab === 'profile' && (
               <div className="bg-white border border-neutral-100 rounded-2xl p-6 md:p-8">
                 <h2 className="text-xl font-semibold text-neutral-900 mb-1">Informations personnelles</h2>
-                <p className="text-neutral-500 text-sm mb-6">Mettez à jour vos informations de profil</p>
+                <p className="text-neutral-500 text-sm mb-6">Cliquez sur l'icône pour modifier un champ</p>
 
-                <div className="space-y-5">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-medium text-neutral-500 mb-1.5 uppercase tracking-wide">Prénom</label>
-                      <input
-                        type="text"
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent text-sm"
-                        placeholder="Votre prénom"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-neutral-500 mb-1.5 uppercase tracking-wide">Nom</label>
-                      <input
-                        type="text"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent text-sm"
-                        placeholder="Votre nom"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-neutral-500 mb-1.5 uppercase tracking-wide">Email</label>
-                    <input
-                      type="email"
-                      value={user?.email || ''}
-                      disabled
-                      className="w-full px-4 py-3 bg-neutral-100 border border-neutral-200 rounded-xl text-neutral-400 cursor-not-allowed text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-neutral-500 mb-1.5 uppercase tracking-wide">Téléphone</label>
-                    <div className="flex gap-2">
-                      <select
-                        value={phoneCountry}
-                        onChange={(e) => setPhoneCountry(e.target.value)}
-                        className="px-3 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-900 text-sm"
+                <div className="space-y-4">
+                  {/* Nom complet */}
+                  <div className="p-4 bg-neutral-50 rounded-xl">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wide">Nom complet</label>
+                      <button
+                        onClick={() => setEditingField(editingField === 'name' ? null : 'name')}
+                        className="p-2 hover:bg-neutral-200 rounded-lg transition-colors"
                       >
-                        <option value="+33">🇫🇷 +33</option>
-                        <option value="+32">🇧🇪 +32</option>
-                        <option value="+41">🇨🇭 +41</option>
-                        <option value="+1">🇺🇸 +1</option>
-                        <option value="+44">🇬🇧 +44</option>
-                      </select>
-                      <input
-                        type="tel"
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
-                        placeholder="6 12 34 56 78"
-                        className="flex-1 px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-900 text-sm"
-                      />
+                        <svg className="w-4 h-4 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                      </button>
                     </div>
+                    {editingField === 'name' ? (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <input
+                            type="text"
+                            value={firstName}
+                            onChange={(e) => setFirstName(e.target.value)}
+                            placeholder="Prénom"
+                            className="px-3 py-2 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-900 text-sm"
+                          />
+                          <input
+                            type="text"
+                            value={lastName}
+                            onChange={(e) => setLastName(e.target.value)}
+                            placeholder="Nom"
+                            className="px-3 py-2 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-900 text-sm"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleSaveField('name')}
+                            disabled={saving}
+                            className="px-4 py-2 bg-neutral-900 text-white rounded-lg text-xs font-medium hover:bg-neutral-800 transition-all disabled:opacity-50"
+                          >
+                            Enregistrer
+                          </button>
+                          <button
+                            onClick={() => setEditingField(null)}
+                            className="px-4 py-2 bg-neutral-200 text-neutral-700 rounded-lg text-xs font-medium hover:bg-neutral-300 transition-all"
+                          >
+                            Annuler
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-neutral-900">{firstName} {lastName}</p>
+                    )}
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-medium text-neutral-500 mb-1.5 uppercase tracking-wide">Adresse</label>
-                    <input
-                      type="text"
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      placeholder="123 rue de la Paix"
-                      className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-900 text-sm"
-                    />
+                  {/* Email (non modifiable) */}
+                  <div className="p-4 bg-neutral-50 rounded-xl">
+                    <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wide mb-2">Email</label>
+                    <p className="text-sm text-neutral-400">{user?.email || ''}</p>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-medium text-neutral-500 mb-1.5 uppercase tracking-wide">Ville</label>
-                      <input
-                        type="text"
-                        value={city}
-                        onChange={(e) => setCity(e.target.value)}
-                        placeholder="Paris"
-                        className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-900 text-sm"
-                      />
+                  {/* Téléphone */}
+                  <div className="p-4 bg-neutral-50 rounded-xl">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wide">Téléphone</label>
+                      <button
+                        onClick={() => setEditingField(editingField === 'phone' ? null : 'phone')}
+                        className="p-2 hover:bg-neutral-200 rounded-lg transition-colors"
+                      >
+                        <svg className="w-4 h-4 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                      </button>
                     </div>
-                    <div>
-                      <label className="block text-xs font-medium text-neutral-500 mb-1.5 uppercase tracking-wide">Code postal</label>
-                      <input
-                        type="text"
-                        value={postalCode}
-                        onChange={(e) => setPostalCode(e.target.value)}
-                        placeholder="75001"
-                        className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-900 text-sm"
-                      />
+                    {editingField === 'phone' ? (
+                      <div className="space-y-3">
+                        <div className="flex gap-2">
+                          <select
+                            value={phoneCountry}
+                            onChange={(e) => setPhoneCountry(e.target.value)}
+                            className="px-3 py-2 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-900 text-sm"
+                          >
+                            <option value="+33">🇫🇷 +33</option>
+                            <option value="+32">🇧🇪 +32</option>
+                            <option value="+41">🇨🇭 +41</option>
+                            <option value="+1">🇺🇸 +1</option>
+                            <option value="+44">🇬🇧 +44</option>
+                          </select>
+                          <input
+                            type="tel"
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                            placeholder="6 12 34 56 78"
+                            className="flex-1 px-3 py-2 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-900 text-sm"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleSaveField('phone')}
+                            disabled={saving}
+                            className="px-4 py-2 bg-neutral-900 text-white rounded-lg text-xs font-medium hover:bg-neutral-800 transition-all disabled:opacity-50"
+                          >
+                            Enregistrer
+                          </button>
+                          <button
+                            onClick={() => setEditingField(null)}
+                            className="px-4 py-2 bg-neutral-200 text-neutral-700 rounded-lg text-xs font-medium hover:bg-neutral-300 transition-all"
+                          >
+                            Annuler
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-neutral-900">{phoneCountry} {phoneNumber || 'Non renseigné'}</p>
+                    )}
+                  </div>
+
+                  {/* Adresse complète */}
+                  <div className="p-4 bg-neutral-50 rounded-xl">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wide">Adresse complète</label>
+                      <button
+                        onClick={() => setEditingField(editingField === 'address' ? null : 'address')}
+                        className="p-2 hover:bg-neutral-200 rounded-lg transition-colors"
+                      >
+                        <svg className="w-4 h-4 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                      </button>
                     </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-neutral-500 mb-1.5 uppercase tracking-wide">Biographie</label>
-                    <textarea
-                      value={bio}
-                      onChange={(e) => setBio(e.target.value)}
-                      rows={4}
-                      placeholder="Parlez-nous de vous..."
-                      className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-900 resize-none text-sm"
-                    />
-                  </div>
-
-                  <div className="pt-2">
-                    <button
-                      onClick={handleSaveProfile}
-                      disabled={saving}
-                      className="px-6 py-3 bg-neutral-900 text-white rounded-xl text-sm font-medium hover:bg-neutral-800 transition-all disabled:opacity-50"
-                    >
-                      {saving ? 'Enregistrement...' : 'Sauvegarder'}
-                    </button>
+                    {editingField === 'address' ? (
+                      <div className="space-y-3">
+                        <input
+                          type="text"
+                          value={address}
+                          onChange={(e) => setAddress(e.target.value)}
+                          placeholder="123 rue de la Paix"
+                          className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-900 text-sm"
+                        />
+                        <div className="grid grid-cols-2 gap-3">
+                          <input
+                            type="text"
+                            value={postalCode}
+                            onChange={(e) => setPostalCode(e.target.value)}
+                            placeholder="Code postal"
+                            className="px-3 py-2 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-900 text-sm"
+                          />
+                          <input
+                            type="text"
+                            value={city}
+                            onChange={(e) => setCity(e.target.value)}
+                            placeholder="Ville"
+                            className="px-3 py-2 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-900 text-sm"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleSaveField('address')}
+                            disabled={saving}
+                            className="px-4 py-2 bg-neutral-900 text-white rounded-lg text-xs font-medium hover:bg-neutral-800 transition-all disabled:opacity-50"
+                          >
+                            Enregistrer
+                          </button>
+                          <button
+                            onClick={() => setEditingField(null)}
+                            className="px-4 py-2 bg-neutral-200 text-neutral-700 rounded-lg text-xs font-medium hover:bg-neutral-300 transition-all"
+                          >
+                            Annuler
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-neutral-900">
+                        {address ? (
+                          <>
+                            <p>{address}</p>
+                            <p>{postalCode} {city}</p>
+                          </>
+                        ) : (
+                          <p className="text-neutral-400">Non renseigné</p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
