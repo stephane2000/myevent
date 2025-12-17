@@ -1,23 +1,86 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
+import { supabase } from '@/lib/supabase'
+
+interface Annonce {
+  id: string
+  titre: string
+  lieu: string
+  budget: number
+  created_at: string
+}
+
+interface Prestataire {
+  id: string
+  nom: string
+  categorie: string
+  note_moyenne: number
+  nombre_avis: number
+  avatar_url?: string
+}
 
 export default function Home() {
-  // Données simulées pour les dernières annonces
-  const dernieresAnnonces = [
-    { id: 1, titre: 'DJ pour mariage', lieu: 'Paris', prix: '500€', date: 'Il y a 2h' },
-    { id: 2, titre: 'Photographe événementiel', lieu: 'Lyon', prix: '350€', date: 'Il y a 5h' },
-    { id: 3, titre: 'Traiteur 50 personnes', lieu: 'Marseille', prix: '1200€', date: 'Il y a 8h' },
-  ]
+  const [annonces, setAnnonces] = useState<Annonce[]>([])
+  const [prestataires, setPrestataires] = useState<Prestataire[]>([])
+  const [loadingAnnonces, setLoadingAnnonces] = useState(true)
+  const [loadingPrestas, setLoadingPrestas] = useState(true)
 
-  // Données simulées pour les meilleurs prestataires
-  const meilleursPrestas = [
-    { id: 1, nom: 'Studio Photo Elite', categorie: 'Photographe', note: 4.9, avis: 127, avatar: 'S' },
-    { id: 2, nom: 'DJ MaxSound', categorie: 'DJ & Musique', note: 4.8, avis: 89, avatar: 'D' },
-    { id: 3, nom: 'Saveurs & Délices', categorie: 'Traiteur', note: 4.9, avis: 156, avatar: 'S' },
-    { id: 4, nom: 'Fleurs & Passion', categorie: 'Fleuriste', note: 4.7, avis: 64, avatar: 'F' },
-  ]
+  useEffect(() => {
+    fetchAnnonces()
+    fetchPrestataires()
+  }, [])
+
+  async function fetchAnnonces() {
+    try {
+      const { data, error } = await supabase
+        .from('annonces')
+        .select('id, titre, lieu, budget, created_at')
+        .order('created_at', { ascending: false })
+        .limit(3)
+      
+      if (error) throw error
+      setAnnonces(data || [])
+    } catch (error) {
+      console.error('Erreur chargement annonces:', error)
+      setAnnonces([])
+    } finally {
+      setLoadingAnnonces(false)
+    }
+  }
+
+  async function fetchPrestataires() {
+    try {
+      const { data, error } = await supabase
+        .from('prestataires')
+        .select('id, nom, categorie, note_moyenne, nombre_avis, avatar_url')
+        .order('note_moyenne', { ascending: false })
+        .limit(4)
+      
+      if (error) throw error
+      setPrestataires(data || [])
+    } catch (error) {
+      console.error('Erreur chargement prestataires:', error)
+      setPrestataires([])
+    } finally {
+      setLoadingPrestas(false)
+    }
+  }
+
+  function formatDate(dateString: string) {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    const diffDays = Math.floor(diffHours / 24)
+    
+    if (diffHours < 1) return 'À l\'instant'
+    if (diffHours < 24) return `Il y a ${diffHours}h`
+    if (diffDays < 7) return `Il y a ${diffDays}j`
+    return date.toLocaleDateString('fr-FR')
+  }
 
   return (
     <div className="min-h-screen bg-[#fafafa]">
@@ -55,108 +118,6 @@ export default function Home() {
               Explorer
             </Link>
           </div>
-
-          {/* Mini stats inline */}
-          <div className="flex items-center justify-center gap-8 mt-12 pt-8 border-t border-neutral-100">
-            <div className="text-center">
-              <div className="text-2xl font-semibold text-neutral-900">500+</div>
-              <p className="text-xs text-neutral-500">Prestataires</p>
-            </div>
-            <div className="w-px h-8 bg-neutral-200"></div>
-            <div className="text-center">
-              <div className="text-2xl font-semibold text-neutral-900">2000+</div>
-              <p className="text-xs text-neutral-500">Événements</p>
-            </div>
-            <div className="w-px h-8 bg-neutral-200"></div>
-            <div className="text-center">
-              <div className="text-2xl font-semibold text-neutral-900">98%</div>
-              <p className="text-xs text-neutral-500">Satisfaction</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Dernières annonces */}
-      <section className="py-16 px-6">
-        <div className="max-w-5xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-2xl font-semibold text-neutral-900">Dernières annonces</h2>
-              <p className="text-neutral-500 text-sm mt-1">Les opportunités récentes</p>
-            </div>
-            <Link href="/annonces" className="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors flex items-center gap-1">
-              Voir tout
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-4">
-            {dernieresAnnonces.map((annonce) => (
-              <Link 
-                key={annonce.id} 
-                href={`/annonces/${annonce.id}`}
-                className="group p-5 rounded-2xl bg-white border border-neutral-100 hover:border-neutral-200 transition-all hover:shadow-sm"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <span className="text-xs text-neutral-400">{annonce.date}</span>
-                  <span className="text-xs font-medium text-neutral-900 bg-neutral-100 px-2 py-1 rounded-full">{annonce.prix}</span>
-                </div>
-                <h3 className="font-medium text-neutral-900 mb-1 group-hover:text-neutral-700">{annonce.titre}</h3>
-                <div className="flex items-center gap-1 text-neutral-500 text-sm">
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  {annonce.lieu}
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Meilleurs prestataires */}
-      <section className="py-16 px-6 bg-white">
-        <div className="max-w-5xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-2xl font-semibold text-neutral-900">Meilleurs prestataires</h2>
-              <p className="text-neutral-500 text-sm mt-1">Les mieux notés par la communauté</p>
-            </div>
-            <Link href="/prestataires" className="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors flex items-center gap-1">
-              Voir tout
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
-
-          <div className="grid md:grid-cols-4 gap-4">
-            {meilleursPrestas.map((presta) => (
-              <Link 
-                key={presta.id} 
-                href={`/prestataires/${presta.id}`}
-                className="group p-5 rounded-2xl bg-neutral-50 hover:bg-neutral-100/80 transition-all"
-              >
-                <div className="w-12 h-12 bg-neutral-200 rounded-xl flex items-center justify-center text-neutral-600 font-semibold mb-4 group-hover:bg-neutral-900 group-hover:text-white transition-all">
-                  {presta.avatar}
-                </div>
-                <h3 className="font-medium text-neutral-900 mb-0.5">{presta.nom}</h3>
-                <p className="text-xs text-neutral-500 mb-3">{presta.categorie}</p>
-                <div className="flex items-center gap-1.5">
-                  <div className="flex items-center gap-1 text-amber-500">
-                    <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                    <span className="text-sm font-medium text-neutral-900">{presta.note}</span>
-                  </div>
-                  <span className="text-xs text-neutral-400">({presta.avis} avis)</span>
-                </div>
-              </Link>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -185,6 +146,133 @@ export default function Home() {
               <p className="text-sm text-neutral-500">Comparez et réservez en toute confiance</p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Meilleurs prestataires */}
+      <section className="py-16 px-6 bg-white">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-2xl font-semibold text-neutral-900">Meilleurs prestataires</h2>
+              <p className="text-neutral-500 text-sm mt-1">Les mieux notés par la communauté</p>
+            </div>
+            <Link href="/prestataires" className="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors flex items-center gap-1">
+              Voir tout
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+
+          {loadingPrestas ? (
+            <div className="grid md:grid-cols-4 gap-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="p-5 rounded-2xl bg-neutral-50 animate-pulse">
+                  <div className="w-12 h-12 bg-neutral-200 rounded-xl mb-4"></div>
+                  <div className="h-4 bg-neutral-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-3 bg-neutral-200 rounded w-1/2"></div>
+                </div>
+              ))}
+            </div>
+          ) : prestataires.length === 0 ? (
+            <div className="text-center py-12 rounded-2xl bg-neutral-50">
+              <svg className="w-12 h-12 mx-auto text-neutral-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <p className="text-neutral-500">Aucun prestataire pour le moment</p>
+              <p className="text-sm text-neutral-400 mt-1">Soyez le premier à vous inscrire !</p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-4 gap-4">
+              {prestataires.map((presta) => (
+                <Link 
+                  key={presta.id} 
+                  href={`/prestataires/${presta.id}`}
+                  className="group p-5 rounded-2xl bg-neutral-50 hover:bg-neutral-100/80 transition-all"
+                >
+                  <div className="w-12 h-12 bg-neutral-200 rounded-xl flex items-center justify-center text-neutral-600 font-semibold mb-4 group-hover:bg-neutral-900 group-hover:text-white transition-all">
+                    {presta.nom?.charAt(0).toUpperCase() || 'P'}
+                  </div>
+                  <h3 className="font-medium text-neutral-900 mb-0.5">{presta.nom}</h3>
+                  <p className="text-xs text-neutral-500 mb-3">{presta.categorie}</p>
+                  <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1 text-amber-500">
+                      <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                      <span className="text-sm font-medium text-neutral-900">{presta.note_moyenne?.toFixed(1) || '—'}</span>
+                    </div>
+                    <span className="text-xs text-neutral-400">({presta.nombre_avis || 0} avis)</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Dernières annonces */}
+      <section className="py-16 px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-2xl font-semibold text-neutral-900">Dernières annonces</h2>
+              <p className="text-neutral-500 text-sm mt-1">Les opportunités récentes</p>
+            </div>
+            <Link href="/annonces" className="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors flex items-center gap-1">
+              Voir tout
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+
+          {loadingAnnonces ? (
+            <div className="grid md:grid-cols-3 gap-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="p-5 rounded-2xl bg-white border border-neutral-100 animate-pulse">
+                  <div className="flex justify-between mb-3">
+                    <div className="h-3 bg-neutral-200 rounded w-16"></div>
+                    <div className="h-5 bg-neutral-200 rounded w-12"></div>
+                  </div>
+                  <div className="h-4 bg-neutral-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-3 bg-neutral-200 rounded w-1/2"></div>
+                </div>
+              ))}
+            </div>
+          ) : annonces.length === 0 ? (
+            <div className="text-center py-12 rounded-2xl bg-white border border-neutral-100">
+              <svg className="w-12 h-12 mx-auto text-neutral-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <p className="text-neutral-500">Aucune annonce pour le moment</p>
+              <p className="text-sm text-neutral-400 mt-1">Publiez la première annonce !</p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-3 gap-4">
+              {annonces.map((annonce) => (
+                <Link 
+                  key={annonce.id} 
+                  href={`/annonces/${annonce.id}`}
+                  className="group p-5 rounded-2xl bg-white border border-neutral-100 hover:border-neutral-200 transition-all hover:shadow-sm"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <span className="text-xs text-neutral-400">{formatDate(annonce.created_at)}</span>
+                    <span className="text-xs font-medium text-neutral-900 bg-neutral-100 px-2 py-1 rounded-full">{annonce.budget}€</span>
+                  </div>
+                  <h3 className="font-medium text-neutral-900 mb-1 group-hover:text-neutral-700">{annonce.titre}</h3>
+                  <div className="flex items-center gap-1 text-neutral-500 text-sm">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {annonce.lieu}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
