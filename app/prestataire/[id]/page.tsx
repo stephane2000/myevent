@@ -57,6 +57,15 @@ export default function PrestatairePublicProfile() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [stats, setStats] = useState<Stats | null>(null)
   const [activeTab, setActiveTab] = useState<'services' | 'reviews'>('services')
+  
+  // États pour le formulaire d'avis
+  const [showReviewForm, setShowReviewForm] = useState(false)
+  const [reviewRating, setReviewRating] = useState(5)
+  const [reviewTitle, setReviewTitle] = useState('')
+  const [reviewComment, setReviewComment] = useState('')
+  const [submittingReview, setSubmittingReview] = useState(false)
+  const [hasReviewed, setHasReviewed] = useState(false)
+  const [userReview, setUserReview] = useState<Review | null>(null)
 
   useEffect(() => {
     loadCurrentUser()
@@ -67,6 +76,26 @@ export default function PrestatairePublicProfile() {
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
       setCurrentUserId(user.id)
+      // Vérifier si l'utilisateur a déjà laissé un avis
+      checkUserReview(user.id)
+    }
+  }
+
+  async function checkUserReview(userId: string) {
+    const prestataireId = params.id as string
+    const { data } = await supabase
+      .from('prestataire_reviews')
+      .select('*')
+      .eq('prestataire_id', prestataireId)
+      .eq('client_id', userId)
+      .single()
+    
+    if (data) {
+      setHasReviewed(true)
+      setUserReview(data)
+      setReviewRating(data.rating)
+      setReviewTitle(data.title || '')
+      setReviewComment(data.comment || '')
     }
   }
 
@@ -78,7 +107,6 @@ export default function PrestatairePublicProfile() {
     const prestataireInfo = prestatairesData?.find((p: any) => p.user_id === prestataireId)
 
     if (!prestataireInfo) {
-      // Prestataire non trouvé, afficher page 404 ou message
       setLoading(false)
       return
     }
@@ -112,17 +140,10 @@ export default function PrestatairePublicProfile() {
 
     if (servicesData) setServices(servicesData)
 
-    // Charger les avis
-    const { data: reviewsData } = await supabase
-      .rpc('get_prestataire_reviews', {
-        p_user_id: prestataireId,
-        p_limit: 10,
-        p_offset: 0
-      })
+    // Charger les avis directement depuis la table
+    await loadReviews(prestataireId)
 
-    if (reviewsData) setReviews(reviewsData)
-
-    // Charger les statistiques depuis prestataire_stats ou utiliser les données RPC
+    // Charger les statistiques
     const { data: statsData } = await supabase
       .from('prestataire_stats')
       .select('*')
@@ -132,7 +153,6 @@ export default function PrestatairePublicProfile() {
     if (statsData) {
       setStats(statsData)
     } else {
-      // Utiliser les stats du RPC si pas de stats dans la table
       setStats({
         total_services: prestataireInfo.total_services || 0,
         total_bookings: 0,
@@ -142,6 +162,75 @@ export default function PrestatairePublicProfile() {
     }
 
     setLoading(false)
+  }
+
+  async function loadReviews(prestataireId: string) {
+    const { data: reviewsData, error } = await supabase
+      .rpc('get_prestataire_reviews', {
+        p_user_id: prestataireId,
+        p_limit: 50,
+        p_offset: 0
+      })
+
+    if (!error && reviewsData) {
+      setReviews(reviewsData)
+    } else {
+      // Fallback: charger directement depuis la table
+      const { data } = await supabase
+        .from('prestataire_reviews')
+        .select('*')
+        .eq('prestataire_id', prestataireId)
+        .order('created_at', { ascending: false })
+      
+      if (data) setReviews(data)
+    }
+  }
+
+  async function submitReview() {
+    if (!currentUserId || !profile) return
+    
+    setSubmittingReview(true)
+    
+    try {
+      // Utiliser le RPC si disponible, sinon insertion directe
+      const { data, error } = await supabase
+        .rpc('add_review', {
+          p_prestataire_id: profile.user_id,
+          p_rating: reviewRating,
+          p_title: reviewTitle || null,
+          p_comment: reviewComment || null
+        })
+
+      if (error) {
+        // Fallback: insertion directe
+        const { error: insertError } = await supabase
+          .from('prestataire_reviews')
+          .upsert({
+            prestataire_id: profile.user_id,
+            client_id: currentUserId,
+            rating: reviewRating,
+            title: reviewTitle || null,
+            comment: reviewComment || null
+          }, {
+            onConflict: 'prestataire_id,client_id'
+          })
+        
+        if (insertError) throw insertError
+      }
+
+      // Recharger les avis et stats
+      await loadReviews(profile.user_id)
+      await loadPrestataireData()
+      
+      setShowReviewForm(false)
+      setHasReviewed(true)
+      
+    } catch (error) {
+      console.error('Erreur soumission avis:', error)
+      alert('Erreur lors de la soumission de l\'avis')
+    } finally {
+      setSubmittingReview(false)
+    }
   }
 
   function formatPrice(service: Service) {
@@ -161,15 +250,34 @@ export default function PrestatairePublicProfile() {
     return `${min}${max}€${typeLabel}`
   }
 
-  function renderStars(rating: number) {
+  function renderStars(rating: number, size: 'sm' | 'md' | 'lg' = 'md') {
+    const sizeClass = size === 'sm' ? 'w-4 h-4' : size === 'lg' ? 'w-6 h-6' : 'w-5 h-5'
     return Array.from({ length: 5 }, (_, i) => (
       <svg
         key={i}
-        className={`w-5 h-5 ${i < rating ? 'text-amber-400 fill-current' : 'text-neutral-300'}`}
+        className={`${sizeClass} ${i < Math.round(rating) ? 'text-amber-400 fill-current' : 'text-neutral-300'}`}
         viewBox="0 0 20 20"
       >
         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
       </svg>
+    ))
+  }
+
+  function renderClickableStars() {
+    return Array.from({ length: 5 }, (_, i) => (
+      <button
+        key={i}
+        type="button"
+        onClick={() => setReviewRating(i + 1)}
+        className="focus:outline-none"
+      >
+        <svg
+          className={`w-8 h-8 transition-colors ${i < reviewRating ? 'text-amber-400 fill-current' : 'text-neutral-300 hover:text-amber-200'}`}
+          viewBox="0 0 20 20"
+        >
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+        </svg>
+      </button>
     ))
   }
 
@@ -215,7 +323,7 @@ export default function PrestatairePublicProfile() {
       <main className="max-w-7xl mx-auto px-6 py-24">
         {/* Header Profile */}
         <div className="bg-white border border-neutral-100 rounded-2xl p-8 mb-6">
-          <div className="flex items-start gap-6">
+          <div className="flex flex-col lg:flex-row items-start gap-6">
             {/* Avatar */}
             <div className="w-24 h-24 bg-gradient-to-br from-neutral-200 to-neutral-300 rounded-2xl flex items-center justify-center text-neutral-600 text-3xl font-semibold flex-shrink-0">
               {profile.first_name?.[0]?.toUpperCase() || 'P'}
@@ -231,9 +339,18 @@ export default function PrestatairePublicProfile() {
                 <p className="text-neutral-600 mb-3">{profile.service_category}</p>
               )}
 
-              {profile.description && (
-                <p className="text-neutral-600 mb-4">{profile.description}</p>
-              )}
+              {/* Rating Stars */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex gap-0.5">
+                  {renderStars(stats?.average_rating || 0, 'lg')}
+                </div>
+                <span className="text-xl font-bold text-neutral-900">
+                  {(stats?.average_rating || 0).toFixed(1)}
+                </span>
+                <span className="text-neutral-500">
+                  ({stats?.total_reviews || 0} avis)
+                </span>
+              </div>
 
               <div className="flex flex-wrap gap-4 text-sm text-neutral-500">
                 {profile.city && (
@@ -294,9 +411,122 @@ export default function PrestatairePublicProfile() {
                   Connectez-vous pour contacter
                 </Link>
               )}
+
+              {/* Review Button */}
+              {currentUserId && currentUserId !== profile.user_id && !hasReviewed && (
+                <button
+                  onClick={() => setShowReviewForm(true)}
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-all"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                  Laisser un avis
+                </button>
+              )}
+              {currentUserId && currentUserId !== profile.user_id && hasReviewed && (
+                <div className="flex items-center justify-center gap-2 px-6 py-3 bg-green-50 text-green-700 rounded-xl font-medium">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Vous avez déjà laissé un avis
+                </div>
+              )}
             </div>
           </div>
         </div>
+
+        {/* Review Form Modal */}
+        {showReviewForm && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-neutral-900">Laisser un avis</h2>
+                <button
+                  onClick={() => setShowReviewForm(false)}
+                  className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <form onSubmit={submitReview} className="space-y-5">
+                {/* Rating */}
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    Note *
+                  </label>
+                  <div className="flex gap-1">
+                    {renderClickableStars()}
+                  </div>
+                  {reviewRating === 0 && (
+                    <p className="text-xs text-neutral-500 mt-1">Cliquez sur les étoiles pour noter</p>
+                  )}
+                </div>
+
+                {/* Title */}
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    Titre de l'avis
+                  </label>
+                  <input
+                    type="text"
+                    value={reviewTitle}
+                    onChange={(e) => setReviewTitle(e.target.value)}
+                    placeholder="Résumez votre expérience..."
+                    className="w-full px-4 py-3 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all"
+                    maxLength={100}
+                  />
+                </div>
+
+                {/* Comment */}
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    Votre avis *
+                  </label>
+                  <textarea
+                    value={reviewComment}
+                    onChange={(e) => setReviewComment(e.target.value)}
+                    placeholder="Décrivez votre expérience avec ce prestataire..."
+                    rows={4}
+                    className="w-full px-4 py-3 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all resize-none"
+                    required
+                  />
+                </div>
+
+                {/* Submit */}
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowReviewForm(false)}
+                    className="flex-1 px-4 py-3 border border-neutral-200 text-neutral-700 rounded-xl font-medium hover:bg-neutral-50 transition-all"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submittingReview || reviewRating === 0}
+                    className="flex-1 px-4 py-3 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {submittingReview ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        Envoi...
+                      </span>
+                    ) : (
+                      'Publier mon avis'
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="flex gap-2 mb-6">
@@ -367,12 +597,32 @@ export default function PrestatairePublicProfile() {
 
         {/* Reviews Tab */}
         {activeTab === 'reviews' && (
-          <div className="space-y-4">
+          <div className="space-y-6">
+            {/* Add review button in tab */}
+            {currentUserId && currentUserId !== profile.user_id && !hasReviewed && (
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-100 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-semibold text-neutral-900 mb-1">Vous avez fait appel à ce prestataire ?</h3>
+                  <p className="text-sm text-neutral-600">Partagez votre expérience avec la communauté !</p>
+                </div>
+                <button
+                  onClick={() => setShowReviewForm(true)}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-all whitespace-nowrap"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                  Écrire un avis
+                </button>
+              </div>
+            )}
+
+            {/* Reviews list */}
             {reviews.map((review) => (
               <div key={review.id} className="bg-white border border-neutral-100 rounded-2xl p-6">
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <p className="font-medium text-neutral-900">{review.client_name}</p>
+                    <p className="font-medium text-neutral-900">{review.client_name || 'Client'}</p>
                     <p className="text-xs text-neutral-500">
                       {new Date(review.created_at).toLocaleDateString('fr-FR', {
                         day: 'numeric',
@@ -381,8 +631,11 @@ export default function PrestatairePublicProfile() {
                       })}
                     </p>
                   </div>
-                  <div className="flex gap-1">
-                    {renderStars(review.rating)}
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-0.5">
+                      {renderStars(review.rating)}
+                    </div>
+                    <span className="text-sm font-medium text-neutral-700">{review.rating}/5</span>
                   </div>
                 </div>
 
@@ -405,7 +658,24 @@ export default function PrestatairePublicProfile() {
 
             {reviews.length === 0 && (
               <div className="bg-white border border-neutral-100 rounded-2xl p-12 text-center">
-                <p className="text-neutral-500">Aucun avis pour le moment</p>
+                <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                </div>
+                <h3 className="font-semibold text-neutral-900 mb-2">Aucun avis pour le moment</h3>
+                <p className="text-neutral-500 mb-4">Soyez le premier à partager votre expérience !</p>
+                {currentUserId && currentUserId !== profile.user_id && (
+                  <button
+                    onClick={() => setShowReviewForm(true)}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-all"
+                  >
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                    Écrire le premier avis
+                  </button>
+                )}
               </div>
             )}
           </div>
