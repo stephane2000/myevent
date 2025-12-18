@@ -71,53 +71,42 @@ export default function PrestatairePublicProfile() {
   }
 
   async function loadPrestataireData() {
-    const userId = params.id as string
+    const prestataireId = params.id as string
 
-    // Charger le profil
-    const { data: userData } = await supabase
-      .from('user_roles')
-      .select(`
-        user_id,
-        auth.users (
-          email,
-          raw_user_meta_data
-        )
-      `)
-      .eq('user_id', userId)
-      .eq('role', 'prestataire')
-      .single()
+    // Utiliser la fonction RPC get_all_prestataires pour récupérer les infos
+    const { data: prestatairesData } = await supabase.rpc('get_all_prestataires')
+    const prestataireInfo = prestatairesData?.find((p: any) => p.user_id === prestataireId)
 
-    if (!userData) {
-      router.push('/dashboard')
+    if (!prestataireInfo) {
+      // Prestataire non trouvé, afficher page 404 ou message
+      setLoading(false)
       return
     }
 
-    // Charger user_settings
+    // Charger user_settings pour plus de détails
     const { data: settingsData } = await supabase
       .from('user_settings')
       .select('phone, city')
-      .eq('user_id', userId)
+      .eq('user_id', prestataireId)
       .single()
 
-    const userMeta = (userData as any).users?.raw_user_meta_data || {}
-
     setProfile({
-      user_id: userId,
-      first_name: userMeta.first_name || '',
-      last_name: userMeta.last_name || '',
-      email: (userData as any).users?.email || '',
-      company_name: userMeta.company_name || null,
-      service_category: userMeta.service_category || null,
-      description: userMeta.description || null,
+      user_id: prestataireId,
+      first_name: prestataireInfo.first_name || '',
+      last_name: prestataireInfo.last_name || '',
+      email: '',
+      company_name: prestataireInfo.company_name || null,
+      service_category: prestataireInfo.service_category || null,
+      description: null,
       phone: settingsData?.phone || null,
-      city: settingsData?.city || null
+      city: prestataireInfo.city || settingsData?.city || null
     })
 
     // Charger les services
     const { data: servicesData } = await supabase
       .from('prestataire_services')
       .select('id, title, description, category, price_type, price_min, price_max, images, view_count')
-      .eq('user_id', userId)
+      .eq('user_id', prestataireId)
       .eq('is_active', true)
       .order('created_at', { ascending: false })
 
@@ -126,21 +115,31 @@ export default function PrestatairePublicProfile() {
     // Charger les avis
     const { data: reviewsData } = await supabase
       .rpc('get_prestataire_reviews', {
-        p_user_id: userId,
+        p_user_id: prestataireId,
         p_limit: 10,
         p_offset: 0
       })
 
     if (reviewsData) setReviews(reviewsData)
 
-    // Charger les statistiques
+    // Charger les statistiques depuis prestataire_stats ou utiliser les données RPC
     const { data: statsData } = await supabase
       .from('prestataire_stats')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', prestataireId)
       .single()
 
-    if (statsData) setStats(statsData)
+    if (statsData) {
+      setStats(statsData)
+    } else {
+      // Utiliser les stats du RPC si pas de stats dans la table
+      setStats({
+        total_services: prestataireInfo.total_services || 0,
+        total_bookings: 0,
+        total_reviews: prestataireInfo.total_reviews || 0,
+        average_rating: prestataireInfo.average_rating || 0
+      })
+    }
 
     setLoading(false)
   }
@@ -185,7 +184,29 @@ export default function PrestatairePublicProfile() {
     )
   }
 
-  if (!profile) return null
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-[#fafafa]">
+        <Navbar />
+        <main className="max-w-7xl mx-auto px-6 py-24">
+          <div className="bg-white border border-neutral-100 rounded-2xl p-12 text-center">
+            <div className="w-16 h-16 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-semibold text-neutral-900 mb-2">Prestataire non trouvé</h2>
+            <p className="text-neutral-500 mb-6">Ce profil n'existe pas ou n'est plus disponible.</p>
+            <Link href="/prestataires" className="inline-flex items-center gap-2 px-6 py-3 bg-neutral-900 text-white rounded-xl font-medium hover:bg-neutral-800 transition-all">
+              Voir tous les prestataires
+            </Link>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  const displayName = `${profile.first_name} ${profile.last_name}`.trim() || 'Prestataire'
 
   return (
     <div className="min-h-screen bg-[#fafafa]">
@@ -203,7 +224,7 @@ export default function PrestatairePublicProfile() {
             {/* Info */}
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-neutral-900 mb-2">
-                {profile.company_name || `${profile.first_name} ${profile.last_name}`}
+                {displayName}
               </h1>
 
               {profile.service_category && (
@@ -248,7 +269,7 @@ export default function PrestatairePublicProfile() {
                     <p className="text-xs text-neutral-500">Prestations</p>
                   </div>
                 </div>
-              )}
+              )}}
               
               {/* Contact Button */}
               {currentUserId && currentUserId !== profile.user_id && (
