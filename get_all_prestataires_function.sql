@@ -21,7 +21,7 @@ BEGIN
     COALESCE(au.raw_user_meta_data->>'last_name', '') as last_name,
     (au.raw_user_meta_data->>'company_name')::text as company_name,
     (au.raw_user_meta_data->>'service_category')::text as service_category,
-    us.city,
+    us.city::text,
     COALESCE(ps.average_rating, 0) as average_rating,
     COALESCE(ps.total_reviews, 0) as total_reviews,
     COALESCE(ps.total_services, 0) as total_services
