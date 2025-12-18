@@ -174,9 +174,8 @@ export default function PrestatairesPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredPrestataires.map((prestataire) => (
-              <Link
+              <div
                 key={prestataire.user_id}
-                href={`/prestataire/${prestataire.user_id}`}
                 className="bg-white border border-neutral-100 rounded-2xl p-6 hover:shadow-lg transition-all"
               >
                 {/* Avatar */}
@@ -221,7 +220,7 @@ export default function PrestatairesPage() {
                 )}
 
                 {/* Stats */}
-                <div className="flex items-center justify-between pt-4 border-t border-neutral-100">
+                <div className="flex items-center justify-between pt-4 pb-4 border-t border-neutral-100 mb-4">
                   <div className="text-center">
                     <p className="text-lg font-bold text-neutral-900">{prestataire.total_services}</p>
                     <p className="text-xs text-neutral-500">Services</p>
@@ -237,7 +236,28 @@ export default function PrestatairesPage() {
                     <p className="text-xs text-neutral-500">Vérifié</p>
                   </div>
                 </div>
-              </Link>
+
+                {/* Actions */}
+                <div className="flex gap-2">
+                  <Link
+                    href={`/prestataire/${prestataire.user_id}`}
+                    className="flex-1 px-4 py-2.5 bg-neutral-900 text-white rounded-xl text-sm font-medium hover:bg-neutral-800 transition-all text-center"
+                  >
+                    Voir le profil
+                  </Link>
+                  {currentUserId && currentUserId !== prestataire.user_id && (
+                    <Link
+                      href={`/messages?prestataire=${prestataire.user_id}`}
+                      className="px-4 py-2.5 bg-neutral-100 text-neutral-700 rounded-xl text-sm font-medium hover:bg-neutral-200 transition-all flex items-center justify-center"
+                      title="Contacter"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                    </Link>
+                  )}
+                </div>
+              </div>
             ))}
           </div>
         )}
