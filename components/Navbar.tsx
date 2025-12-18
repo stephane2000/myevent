@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 export default function Navbar() {
   const [user, setUser] = useState<any>(null)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [isPrestataire, setIsPrestataire] = useState(false)
   const [loading, setLoading] = useState(true)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -41,15 +42,16 @@ export default function Navbar() {
   async function checkUser() {
     const { data: { user } } = await supabase.auth.getUser()
     setUser(user)
-    
-    // Vérifier si l'utilisateur est admin
+
+    // Vérifier si l'utilisateur est admin et son rôle
     if (user) {
       const { data: roleData } = await supabase.rpc('get_current_user_role')
       if (roleData && roleData.length > 0) {
         setIsAdmin(roleData[0].is_admin || false)
+        setIsPrestataire(roleData[0].role === 'prestataire')
       }
     }
-    
+
     setLoading(false)
   }
 
@@ -162,6 +164,22 @@ export default function Navbar() {
                       </svg>
                       <span className="text-sm font-medium">Paramètres</span>
                     </Link>
+
+                    {isPrestataire && (
+                      <>
+                        <div className="border-t border-stone-100 my-1.5 mx-3"></div>
+                        <Link
+                          href="/prestataire/services"
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors mx-1.5 rounded-lg"
+                        >
+                          <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                          <span className="text-sm font-medium">Mes Services</span>
+                        </Link>
+                      </>
+                    )}
 
                     {isAdmin && (
                       <>

@@ -188,9 +188,22 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-            <Link href="/parametres" className="px-5 py-2.5 text-sm font-medium text-neutral-700 bg-neutral-100 hover:bg-neutral-200 rounded-xl transition-all flex-shrink-0">
-              Modifier le profil
-            </Link>
+            <div className="flex gap-3">
+              {userRole === 'prestataire' && (
+                <Link
+                  href="/prestataire/services/nouveau"
+                  className="px-5 py-2.5 text-sm font-medium text-white bg-neutral-900 hover:bg-neutral-800 rounded-xl transition-all flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Créer un service
+                </Link>
+              )}
+              <Link href="/parametres" className="px-5 py-2.5 text-sm font-medium text-neutral-700 bg-neutral-100 hover:bg-neutral-200 rounded-xl transition-all flex-shrink-0">
+                Modifier le profil
+              </Link>
+            </div>
           </div>
         </div>
 
