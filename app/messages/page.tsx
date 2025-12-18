@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useState, Suspense, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Navbar from '@/components/Navbar'
@@ -33,6 +33,12 @@ function MessagesContent() {
   const [newConversationUser, setNewConversationUser] = useState<{id: string, name: string} | null>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Scroll auto vers le bas quand les messages changent
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
 
   useEffect(() => {
     checkAuthAndLoad()
@@ -313,6 +319,7 @@ function MessagesContent() {
                       </div>
                     </div>
                   ))}
+                  <div ref={messagesEndRef} />
                 </div>
 
                 {/* Input */}
