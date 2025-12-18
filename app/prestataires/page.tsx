@@ -22,6 +22,8 @@ export default function PrestatairesPage() {
   const [prestataires, setPrestataires] = useState<Prestataire[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [isPrestataire, setIsPrestataire] = useState(false)
 
   const categories = [
     'Tous',
@@ -39,59 +41,33 @@ export default function PrestatairesPage() {
   ]
 
   useEffect(() => {
-    loadPrestataires()
+    checkUserAndLoadPrestataires()
   }, [])
+
+  async function checkUserAndLoadPrestataires() {
+    // Vérifier l'utilisateur connecté
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      setCurrentUserId(user.id)
+      const { data: roleData } = await supabase.rpc('get_current_user_role')
+      if (roleData && roleData.length > 0) {
+        setIsPrestataire(roleData[0].role === 'prestataire')
+      }
+    }
+
+    // Charger les prestataires
+    await loadPrestataires()
+  }
 
   async function loadPrestataires() {
     try {
-      // Récupérer tous les prestataires avec leurs stats
-      const { data: prestataireData, error } = await supabase
-        .from('user_roles')
-        .select(`
-          user_id,
-          auth.users (
-            email,
-            raw_user_meta_data
-          )
-        `)
-        .eq('role', 'prestataire')
+      const { data, error } = await supabase.rpc('get_all_prestataires')
 
       if (error) throw error
 
-      // Pour chaque prestataire, récupérer ses stats et infos
-      const prestatairesList = await Promise.all(
-        (prestataireData || []).map(async (p: any) => {
-          const userMeta = p.users?.raw_user_meta_data || {}
-
-          // Récupérer les stats
-          const { data: stats } = await supabase
-            .from('prestataire_stats')
-            .select('*')
-            .eq('user_id', p.user_id)
-            .single()
-
-          // Récupérer la ville depuis user_settings
-          const { data: settings } = await supabase
-            .from('user_settings')
-            .select('city')
-            .eq('user_id', p.user_id)
-            .single()
-
-          return {
-            user_id: p.user_id,
-            first_name: userMeta.first_name || '',
-            last_name: userMeta.last_name || '',
-            company_name: userMeta.company_name || null,
-            service_category: userMeta.service_category || null,
-            city: settings?.city || null,
-            average_rating: stats?.average_rating || 0,
-            total_reviews: stats?.total_reviews || 0,
-            total_services: stats?.total_services || 0
-          }
-        })
-      )
-
-      setPrestataires(prestatairesList)
+      if (data) {
+        setPrestataires(data)
+      }
     } catch (error) {
       console.error('Erreur chargement prestataires:', error)
     } finally {
@@ -266,20 +242,22 @@ export default function PrestatairesPage() {
           </div>
         )}
 
-        {/* CTA */}
-        <div className="mt-12 bg-gradient-to-r from-neutral-900 to-neutral-800 rounded-2xl p-8 text-center text-white">
-          <h2 className="text-2xl font-bold mb-2">Vous êtes prestataire ?</h2>
-          <p className="text-neutral-300 mb-6">Rejoignez notre plateforme et développez votre activité</p>
-          <Link
-            href="/register"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-white text-neutral-900 rounded-xl font-medium hover:bg-neutral-100 transition-all"
-          >
-            Créer un compte prestataire
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-          </Link>
-        </div>
+        {/* CTA - masqué pour les prestataires connectés */}
+        {!isPrestataire && (
+          <div className="mt-12 bg-gradient-to-r from-neutral-900 to-neutral-800 rounded-2xl p-8 text-center text-white">
+            <h2 className="text-2xl font-bold mb-2">Vous êtes prestataire ?</h2>
+            <p className="text-neutral-300 mb-6">Rejoignez notre plateforme et développez votre activité</p>
+            <Link
+              href="/register"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-white text-neutral-900 rounded-xl font-medium hover:bg-neutral-100 transition-all"
+            >
+              Créer un compte prestataire
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </Link>
+          </div>
+        )}
       </main>
     </div>
   )
