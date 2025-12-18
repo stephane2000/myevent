@@ -25,11 +25,24 @@ interface Stats {
   users_this_week: number
 }
 
+interface Service {
+  id: string
+  title: string
+  category: string
+  price_min: number | null
+  price_max: number | null
+  is_active: boolean
+  created_at: string
+  user_id: string
+  prestataire_name: string
+}
+
 export default function AdminPage() {
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
   const [activeTab, setActiveTab] = useState<'users' | 'listings'>('users')
   const [users, setUsers] = useState<User[]>([])
+  const [services, setServices] = useState<Service[]>([])
   const [stats, setStats] = useState<Stats | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [totalUsers, setTotalUsers] = useState(0)
@@ -45,10 +58,14 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (isAdmin) {
-      loadUsers()
+      if (activeTab === 'users') {
+        loadUsers()
+      } else {
+        loadServices()
+      }
       loadStats()
     }
-  }, [isAdmin, searchQuery, currentPage])
+  }, [isAdmin, searchQuery, currentPage, activeTab])
 
   async function checkAdminAccess() {
     const { data: { user } } = await supabase.auth.getUser()
@@ -80,7 +97,7 @@ export default function AdminPage() {
     const { data: countData } = await supabase.rpc('admin_count_users', {
       p_search: searchQuery || null
     })
-    
+
     if (countData !== null) {
       setTotalUsers(countData)
     }
@@ -95,6 +112,37 @@ export default function AdminPage() {
       console.error('Erreur chargement users:', error)
     } else if (data) {
       setUsers(data)
+    }
+  }
+
+  async function loadServices() {
+    try {
+      const { data, error } = await supabase
+        .from('prestataire_services')
+        .select(`
+          id,
+          title,
+          category,
+          price_min,
+          price_max,
+          is_active,
+          created_at,
+          user_id
+        `)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+
+      // Pour chaque service, récupérer le nom du prestataire
+      if (data) {
+        const servicesWithPrestataire = data.map((service: any) => ({
+          ...service,
+          prestataire_name: 'Prestataire' // Sera amélioré avec une fonction RPC
+        }))
+        setServices(servicesWithPrestataire)
+      }
+    } catch (error) {
+      console.error('Erreur chargement services:', error)
     }
   }
 
@@ -407,16 +455,74 @@ export default function AdminPage() {
 
         {/* Listings Tab */}
         {activeTab === 'listings' && (
-          <div className="bg-white border border-neutral-100 rounded-2xl p-12 text-center">
-            <div className="w-16 h-16 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
+          <div className="bg-white border border-neutral-100 rounded-2xl overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-neutral-50 border-b border-neutral-100">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Service</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Catégorie</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Prix</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Statut</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Date</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-100">
+                  {services.map((service: Service) => (
+                    <tr key={service.id} className="hover:bg-neutral-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-medium text-neutral-900">{service.title}</div>
+                        <div className="text-xs text-neutral-500">{service.prestataire_name}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="px-2 py-1 text-xs font-medium bg-neutral-100 text-neutral-700 rounded-lg">
+                          {service.category}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-neutral-600">
+                        {service.price_min && service.price_max
+                          ? `${service.price_min}€ - ${service.price_max}€`
+                          : service.price_min
+                          ? `${service.price_min}€`
+                          : 'Sur devis'}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-1 text-xs font-medium rounded-lg ${
+                          service.is_active
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : 'bg-red-100 text-red-700'
+                        }`}>
+                          {service.is_active ? 'Actif' : 'Inactif'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-neutral-600">
+                        {new Date(service.created_at).toLocaleDateString('fr-FR')}
+                      </td>
+                      <td className="px-6 py-4">
+                        <button
+                          className="text-sm text-violet-600 hover:text-violet-800 font-medium"
+                          onClick={() => router.push(`/prestataire/${service.user_id}`)}
+                        >
+                          Voir
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {services.length === 0 && (
+                <div className="p-12 text-center">
+                  <div className="w-16 h-16 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                  </div>
+                  <p className="text-neutral-500">Aucun service trouvé</p>
+                </div>
+              )}
             </div>
-            <h3 className="text-lg font-medium text-neutral-900 mb-2">Annonces & Prestataires</h3>
-            <p className="text-neutral-500 text-sm max-w-md mx-auto">
-              Cette section sera disponible une fois que vous aurez créé les tables d'annonces et de services prestataires.
-            </p>
           </div>
         )}
       </main>

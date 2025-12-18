@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import Link from 'next/link'
 
-export default function NouveauServicePage() {
-  const [loading, setLoading] = useState(false)
+export default function ModifierServicePage() {
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState('')
@@ -23,6 +24,8 @@ export default function NouveauServicePage() {
   const [images, setImages] = useState<string[]>([])
   const [newImageUrl, setNewImageUrl] = useState('')
   const router = useRouter()
+  const params = useParams()
+  const serviceId = params?.id as string
 
   const categories = [
     'DJ / Musique',
@@ -39,19 +42,93 @@ export default function NouveauServicePage() {
   ]
 
   useEffect(() => {
-    checkAccess()
-  }, [])
+    loadService()
+  }, [serviceId])
 
-  async function checkAccess() {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      router.push('/login')
-      return
+  async function loadService() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        router.push('/login')
+        return
+      }
+
+      const { data, error } = await supabase
+        .from('prestataire_services')
+        .select('*')
+        .eq('id', serviceId)
+        .eq('user_id', user.id)
+        .single()
+
+      if (error) throw error
+
+      if (data) {
+        setTitle(data.title || '')
+        setDescription(data.description || '')
+        setCategory(data.category || '')
+        setPriceType(data.price_type || 'fixed')
+        setPriceMin(data.price_min?.toString() || '')
+        setPriceMax(data.price_max?.toString() || '')
+        setLocationType(data.location_type || 'on_site')
+        setServiceArea(data.service_area?.join(', ') || '')
+        setDurationMin(data.duration_min?.toString() || '')
+        setDurationMax(data.duration_max?.toString() || '')
+        setCapacity(data.capacity?.toString() || '')
+        setTags(data.tags?.join(', ') || '')
+        setImages(data.images || [])
+      }
+    } catch (error: any) {
+      alert('Erreur: ' + error.message)
+      router.push('/prestataire/services')
+    } finally {
+      setLoading(false)
     }
+  }
 
-    const { data: roleData } = await supabase.rpc('get_current_user_role')
-    if (!roleData || roleData.length === 0 || roleData[0].role !== 'prestataire') {
-      router.push('/dashboard')
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setSaving(true)
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Non authentifié')
+
+      const serviceData = {
+        title,
+        description,
+        category,
+        price_type: priceType,
+        price_min: priceMin ? parseFloat(priceMin) : null,
+        price_max: priceMax ? parseFloat(priceMax) : null,
+        location_type: locationType,
+        service_area: serviceArea ? serviceArea.split(',').map(s => s.trim()) : [],
+        duration_min: durationMin ? parseInt(durationMin) : null,
+        duration_max: durationMax ? parseInt(durationMax) : null,
+        capacity: capacity ? parseInt(capacity) : null,
+        tags: tags ? tags.split(',').map(t => t.trim()) : [],
+        images,
+        updated_at: new Date().toISOString()
+      }
+
+      const { error } = await supabase
+        .from('prestataire_services')
+        .update(serviceData)
+        .eq('id', serviceId)
+        .eq('user_id', user.id)
+
+      if (error) throw error
+
+      // Log activity
+      await supabase.rpc('log_user_activity', {
+        p_action_type: 'service_updated',
+        p_action_details: `Service modifié: ${title}`
+      })
+
+      router.push('/prestataire/services')
+    } catch (error: any) {
+      alert('Erreur: ' + error.message)
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -66,50 +143,15 @@ export default function NouveauServicePage() {
     setImages(images.filter((_, i) => i !== index))
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Non authentifié')
-
-      const serviceData = {
-        user_id: user.id,
-        title,
-        description,
-        category,
-        price_type: priceType,
-        price_min: priceMin ? parseFloat(priceMin) : null,
-        price_max: priceMax ? parseFloat(priceMax) : null,
-        location_type: locationType,
-        service_area: serviceArea ? serviceArea.split(',').map(s => s.trim()) : [],
-        duration_min: durationMin ? parseInt(durationMin) : null,
-        duration_max: durationMax ? parseInt(durationMax) : null,
-        capacity: capacity ? parseInt(capacity) : null,
-        tags: tags ? tags.split(',').map(t => t.trim()) : [],
-        images,
-        is_active: true
-      }
-
-      const { error } = await supabase
-        .from('prestataire_services')
-        .insert([serviceData])
-
-      if (error) throw error
-
-      // Log activity
-      await supabase.rpc('log_user_activity', {
-        p_action_type: 'service_created',
-        p_action_details: `Service créé: ${title}`
-      })
-
-      router.push('/prestataire/services')
-    } catch (error: any) {
-      alert('Erreur: ' + error.message)
-    } finally {
-      setLoading(false)
-    }
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#fafafa] flex items-center justify-center">
+        <div className="flex items-center gap-3">
+          <div className="w-5 h-5 border-2 border-neutral-300 border-t-neutral-600 rounded-full animate-spin"></div>
+          <span className="text-neutral-500">Chargement...</span>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -128,8 +170,8 @@ export default function NouveauServicePage() {
             </svg>
             Retour aux services
           </Link>
-          <h1 className="text-3xl font-bold text-neutral-900 mb-2">Créer un service</h1>
-          <p className="text-neutral-500">Ajoutez une nouvelle prestation à votre catalogue</p>
+          <h1 className="text-3xl font-bold text-neutral-900 mb-2">Modifier le service</h1>
+          <p className="text-neutral-500">Mettez à jour les informations de votre prestation</p>
         </div>
 
         {/* Form */}
@@ -374,10 +416,10 @@ export default function NouveauServicePage() {
             </Link>
             <button
               type="submit"
-              disabled={loading}
+              disabled={saving}
               className="flex-1 py-3 bg-neutral-900 text-white rounded-xl font-medium hover:bg-neutral-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
             >
-              {loading ? 'Création...' : 'Créer le service'}
+              {saving ? 'Enregistrement...' : 'Enregistrer les modifications'}
             </button>
           </div>
         </form>
