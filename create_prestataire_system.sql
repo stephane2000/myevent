@@ -49,21 +49,17 @@ CREATE POLICY "Prestataires peuvent voir tous leurs services"
   ON public.prestataire_services FOR SELECT
   USING (auth.uid() = user_id);
 
-CREATE POLICY "Prestataires peuvent créer leurs services"
+-- Policy simplifiée sans vérification du rôle pour éviter la récursion RLS
+-- La vérification du rôle prestataire est faite côté application
+CREATE POLICY "Utilisateurs peuvent créer leurs services"
   ON public.prestataire_services FOR INSERT
-  WITH CHECK (
-    auth.uid() = user_id
-    AND EXISTS (
-      SELECT 1 FROM public.user_roles
-      WHERE user_id = auth.uid() AND role = 'prestataire'
-    )
-  );
+  WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Prestataires peuvent modifier leurs services"
+CREATE POLICY "Utilisateurs peuvent modifier leurs services"
   ON public.prestataire_services FOR UPDATE
   USING (auth.uid() = user_id);
 
-CREATE POLICY "Prestataires peuvent supprimer leurs services"
+CREATE POLICY "Utilisateurs peuvent supprimer leurs services"
   ON public.prestataire_services FOR DELETE
   USING (auth.uid() = user_id);
 
