@@ -37,6 +37,8 @@ export default function Login() {
               .upsert({
                 user_id: data.user.id,
                 ...settings
+              }, {
+                onConflict: 'user_id'
               })
 
             // Nettoyer le localStorage
