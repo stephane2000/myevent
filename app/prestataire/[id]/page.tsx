@@ -54,12 +54,21 @@ export default function PrestatairePublicProfile() {
   const [profile, setProfile] = useState<PrestataireProfile | null>(null)
   const [services, setServices] = useState<Service[]>([])
   const [reviews, setReviews] = useState<Review[]>([])
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [stats, setStats] = useState<Stats | null>(null)
   const [activeTab, setActiveTab] = useState<'services' | 'reviews'>('services')
 
   useEffect(() => {
+    loadCurrentUser()
     loadPrestataireData()
   }, [params.id])
+
+  async function loadCurrentUser() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      setCurrentUserId(user.id)
+    }
+  }
 
   async function loadPrestataireData() {
     const userId = params.id as string
@@ -226,19 +235,45 @@ export default function PrestatairePublicProfile() {
               </div>
             </div>
 
-            {/* Stats Cards */}
-            {stats && (
-              <div className="flex gap-4">
-                <div className="bg-neutral-50 rounded-xl p-4 text-center min-w-[100px]">
-                  <p className="text-2xl font-bold text-neutral-900">{stats.total_services}</p>
-                  <p className="text-xs text-neutral-500">Services</p>
+            {/* Stats Cards & Contact */}
+            <div className="flex flex-col gap-4">
+              {stats && (
+                <div className="flex gap-4">
+                  <div className="bg-neutral-50 rounded-xl p-4 text-center min-w-[100px]">
+                    <p className="text-2xl font-bold text-neutral-900">{stats.total_services}</p>
+                    <p className="text-xs text-neutral-500">Services</p>
+                  </div>
+                  <div className="bg-neutral-50 rounded-xl p-4 text-center min-w-[100px]">
+                    <p className="text-2xl font-bold text-neutral-900">{stats.total_bookings}</p>
+                    <p className="text-xs text-neutral-500">Prestations</p>
+                  </div>
                 </div>
-                <div className="bg-neutral-50 rounded-xl p-4 text-center min-w-[100px]">
-                  <p className="text-2xl font-bold text-neutral-900">{stats.total_bookings}</p>
-                  <p className="text-xs text-neutral-500">Prestations</p>
-                </div>
-              </div>
-            )}
+              )}
+              
+              {/* Contact Button */}
+              {currentUserId && currentUserId !== profile.user_id && (
+                <Link
+                  href={`/messages?prestataire=${profile.user_id}`}
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-neutral-900 text-white rounded-xl font-medium hover:bg-neutral-800 transition-all"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  Contacter
+                </Link>
+              )}
+              {!currentUserId && (
+                <Link
+                  href="/login"
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-neutral-100 text-neutral-700 rounded-xl font-medium hover:bg-neutral-200 transition-all"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  Connectez-vous pour contacter
+                </Link>
+              )}
+            </div>
           </div>
         </div>
 

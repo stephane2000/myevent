@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { supabase } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 
 interface Conversation {
@@ -22,7 +22,7 @@ interface Message {
   created_at: string
 }
 
-export default function MessagesPage() {
+function MessagesContent() {
   const [loading, setLoading] = useState(true)
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null)
@@ -30,11 +30,22 @@ export default function MessagesPage() {
   const [newMessage, setNewMessage] = useState('')
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
+  const [newConversationUser, setNewConversationUser] = useState<{id: string, name: string} | null>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   useEffect(() => {
     checkAuthAndLoad()
   }, [])
+
+  useEffect(() => {
+    if (currentUserId && searchParams.get('prestataire')) {
+      const prestataireId = searchParams.get('prestataire')
+      if (prestataireId && prestataireId !== currentUserId) {
+        handleNewConversation(currentUserId, prestataireId)
+      }
+    }
+  }, [currentUserId, searchParams, conversations])
 
   useEffect(() => {
     if (selectedConversation) {
@@ -53,6 +64,53 @@ export default function MessagesPage() {
     setCurrentUserId(user.id)
     await loadConversations(user.id)
     setLoading(false)
+  }
+
+  async function handleNewConversation(userId: string, prestataireId: string) {
+    // Check if conversation already exists
+    const existingConv = conversations.find(c => c.other_user_id === prestataireId)
+    if (existingConv) {
+      setSelectedConversation(existingConv.id)
+      return
+    }
+
+    // Get prestataire info
+    const { data: prestataireData } = await supabase
+      .from('user_roles')
+      .select('user_id')
+      .eq('user_id', prestataireId)
+      .eq('role', 'prestataire')
+      .single()
+
+    if (!prestataireData) return
+
+    // Get prestataire name from auth.users metadata
+    const { data: userData } = await supabase.auth.admin?.getUserById?.(prestataireId) || { data: null }
+    
+    // Try to get name from user_settings or create conversation
+    const { data: settingsData } = await supabase
+      .from('user_settings')
+      .select('*')
+      .eq('user_id', prestataireId)
+      .single()
+
+    // Create or get conversation
+    const { data: convData, error: convError } = await supabase
+      .rpc('get_or_create_conversation', {
+        p_user_id: userId,
+        p_other_user_id: prestataireId
+      })
+
+    if (convData && !convError) {
+      await loadConversations(userId)
+      setSelectedConversation(convData)
+    } else {
+      // If RPC doesn't exist, set up new conversation UI
+      setNewConversationUser({
+        id: prestataireId,
+        name: 'Prestataire'
+      })
+    }
   }
 
   async function loadConversations(userId: string) {
@@ -95,21 +153,45 @@ export default function MessagesPage() {
   }
 
   async function sendMessage() {
-    if (!newMessage.trim() || !selectedConversation || !currentUserId) return
+    if (!newMessage.trim() || !currentUserId) return
+    if (!selectedConversation && !newConversationUser) return
 
     setSending(true)
+
+    let conversationId = selectedConversation
+
+    // If this is a new conversation, create it first
+    if (!conversationId && newConversationUser) {
+      const { data: convData, error: convError } = await supabase
+        .rpc('get_or_create_conversation', {
+          p_user_id: currentUserId,
+          p_other_user_id: newConversationUser.id
+        })
+
+      if (convError || !convData) {
+        console.error('Erreur création conversation:', convError)
+        setSending(false)
+        return
+      }
+
+      conversationId = convData
+      setSelectedConversation(conversationId)
+      setNewConversationUser(null)
+    }
 
     const { error } = await supabase
       .from('messages')
       .insert([{
-        conversation_id: selectedConversation,
+        conversation_id: conversationId,
         sender_id: currentUserId,
         content: newMessage.trim()
       }])
 
     if (!error) {
       setNewMessage('')
-      loadMessages(selectedConversation)
+      if (conversationId) {
+        loadMessages(conversationId)
+      }
       loadConversations(currentUserId)
     }
 
@@ -192,13 +274,16 @@ export default function MessagesPage() {
 
           {/* Zone de messages */}
           <div className="flex-1 bg-white border border-neutral-100 rounded-2xl flex flex-col">
-            {selectedConversation ? (
+            {(selectedConversation || newConversationUser) ? (
               <>
                 {/* Header */}
                 <div className="p-4 border-b border-neutral-100">
                   <p className="font-semibold text-neutral-900">
-                    {conversations.find(c => c.id === selectedConversation)?.other_user_name}
+                    {newConversationUser?.name || conversations.find(c => c.id === selectedConversation)?.other_user_name}
                   </p>
+                  {newConversationUser && (
+                    <p className="text-xs text-neutral-500">Nouvelle conversation</p>
+                  )}
                 </div>
 
                 {/* Messages */}
@@ -265,5 +350,20 @@ export default function MessagesPage() {
         </div>
       </main>
     </div>
+  )
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#fafafa] flex items-center justify-center">
+        <div className="flex items-center gap-3">
+          <div className="w-5 h-5 border-2 border-neutral-300 border-t-neutral-600 rounded-full animate-spin"></div>
+          <span className="text-neutral-500">Chargement...</span>
+        </div>
+      </div>
+    }>
+      <MessagesContent />
+    </Suspense>
   )
 }
