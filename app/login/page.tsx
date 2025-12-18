@@ -31,11 +31,13 @@ export default function Login() {
         if (pendingData) {
           try {
             const settings = JSON.parse(pendingData)
-            // Sauvegarder dans user_settings
+            // Sauvegarder dans user_settings (upsert pour créer si n'existe pas)
             await supabase
               .from('user_settings')
-              .update(settings)
-              .eq('user_id', data.user.id)
+              .upsert({
+                user_id: data.user.id,
+                ...settings
+              })
 
             // Nettoyer le localStorage
             localStorage.removeItem('pendingUserSettings')
