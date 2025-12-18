@@ -173,7 +173,12 @@ export default function PrestatairesPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredPrestataires.map((prestataire) => (
+            {filteredPrestataires.map((prestataire) => {
+              const fullName = `${prestataire.first_name} ${prestataire.last_name}`.trim()
+              const displayName = fullName || prestataire.company_name || 'Prestataire'
+              const showCompanyName = prestataire.company_name && fullName && prestataire.company_name !== fullName
+              
+              return (
               <div
                 key={prestataire.user_id}
                 className="bg-white border border-neutral-100 rounded-2xl p-6 hover:shadow-lg transition-all"
@@ -181,12 +186,15 @@ export default function PrestatairesPage() {
                 {/* Avatar */}
                 <div className="flex items-center gap-4 mb-4">
                   <div className="w-16 h-16 bg-gradient-to-br from-neutral-200 to-neutral-300 rounded-xl flex items-center justify-center text-neutral-600 text-2xl font-semibold">
-                    {(prestataire.first_name?.[0] || prestataire.company_name?.[0] || 'P').toUpperCase()}
+                    {(prestataire.first_name?.[0] || 'P').toUpperCase()}
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold text-neutral-900">
-                      {prestataire.company_name || `${prestataire.first_name} ${prestataire.last_name}`}
+                      {displayName}
                     </h3>
+                    {showCompanyName && (
+                      <p className="text-sm text-neutral-600">{prestataire.company_name}</p>
+                    )}
                     {prestataire.service_category && (
                       <p className="text-sm text-neutral-500">{prestataire.service_category}</p>
                     )}
@@ -258,7 +266,8 @@ export default function PrestatairesPage() {
                   )}
                 </div>
               </div>
-            ))}
+              )
+            })}
           </div>
         )}
 
