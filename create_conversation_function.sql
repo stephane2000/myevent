@@ -117,13 +117,10 @@ BEGIN
       WHEN c.user1_id = p_user_id THEN c.user2_id
       ELSE c.user1_id
     END as other_user_id,
-    COALESCE(
-      au.raw_user_meta_data->>'company_name',
-      CONCAT(
-        COALESCE(au.raw_user_meta_data->>'first_name', ''),
-        ' ',
-        COALESCE(au.raw_user_meta_data->>'last_name', '')
-      )
+    CONCAT(
+      COALESCE(au.raw_user_meta_data->>'first_name', ''),
+      ' ',
+      COALESCE(au.raw_user_meta_data->>'last_name', '')
     )::text as other_user_name,
     (
       SELECT m.content
