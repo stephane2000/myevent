@@ -269,7 +269,7 @@ export default function PrestatairePublicProfile() {
                     <p className="text-xs text-neutral-500">Prestations</p>
                   </div>
                 </div>
-              )}}
+              )}
               
               {/* Contact Button */}
               {currentUserId && currentUserId !== profile.user_id && (
