@@ -1,8 +1,12 @@
 -- Fonction pour créer ou récupérer une conversation entre deux utilisateurs
 -- À exécuter dans Supabase Dashboard > SQL Editor
 
--- D'abord, créer la table conversations si elle n'existe pas
-CREATE TABLE IF NOT EXISTS public.conversations (
+-- Supprimer les anciennes tables si elles existent avec une structure différente
+DROP TABLE IF EXISTS public.messages CASCADE;
+DROP TABLE IF EXISTS public.conversations CASCADE;
+
+-- Créer la table conversations
+CREATE TABLE public.conversations (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   user1_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   user2_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -11,8 +15,8 @@ CREATE TABLE IF NOT EXISTS public.conversations (
   UNIQUE(user1_id, user2_id)
 );
 
--- Créer la table messages si elle n'existe pas
-CREATE TABLE IF NOT EXISTS public.messages (
+-- Créer la table messages
+CREATE TABLE public.messages (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   conversation_id uuid NOT NULL REFERENCES public.conversations(id) ON DELETE CASCADE,
   sender_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -23,26 +27,23 @@ CREATE TABLE IF NOT EXISTS public.messages (
 );
 
 -- Index pour les performances
-CREATE INDEX IF NOT EXISTS idx_conversations_user1 ON public.conversations(user1_id);
-CREATE INDEX IF NOT EXISTS idx_conversations_user2 ON public.conversations(user2_id);
-CREATE INDEX IF NOT EXISTS idx_messages_conversation ON public.messages(conversation_id);
-CREATE INDEX IF NOT EXISTS idx_messages_sender ON public.messages(sender_id);
+CREATE INDEX idx_conversations_user1 ON public.conversations(user1_id);
+CREATE INDEX idx_conversations_user2 ON public.conversations(user2_id);
+CREATE INDEX idx_messages_conversation ON public.messages(conversation_id);
+CREATE INDEX idx_messages_sender ON public.messages(sender_id);
 
 -- Activer RLS
 ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 
 -- Policies pour conversations
-DROP POLICY IF EXISTS "Users can view their own conversations" ON public.conversations;
 CREATE POLICY "Users can view their own conversations" ON public.conversations
   FOR SELECT USING (auth.uid() = user1_id OR auth.uid() = user2_id);
 
-DROP POLICY IF EXISTS "Users can create conversations" ON public.conversations;
 CREATE POLICY "Users can create conversations" ON public.conversations
   FOR INSERT WITH CHECK (auth.uid() = user1_id OR auth.uid() = user2_id);
 
 -- Policies pour messages
-DROP POLICY IF EXISTS "Users can view messages in their conversations" ON public.messages;
 CREATE POLICY "Users can view messages in their conversations" ON public.messages
   FOR SELECT USING (
     EXISTS (
@@ -52,7 +53,6 @@ CREATE POLICY "Users can view messages in their conversations" ON public.message
     )
   );
 
-DROP POLICY IF EXISTS "Users can send messages in their conversations" ON public.messages;
 CREATE POLICY "Users can send messages in their conversations" ON public.messages
   FOR INSERT WITH CHECK (
     auth.uid() = sender_id AND
@@ -63,7 +63,6 @@ CREATE POLICY "Users can send messages in their conversations" ON public.message
     )
   );
 
-DROP POLICY IF EXISTS "Users can update messages they received" ON public.messages;
 CREATE POLICY "Users can update messages they received" ON public.messages
   FOR UPDATE USING (
     EXISTS (

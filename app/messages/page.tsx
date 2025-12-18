@@ -71,30 +71,19 @@ function MessagesContent() {
     const existingConv = conversations.find(c => c.other_user_id === prestataireId)
     if (existingConv) {
       setSelectedConversation(existingConv.id)
+      setNewConversationUser(null)
       return
     }
 
-    // Get prestataire info
-    const { data: prestataireData } = await supabase
-      .from('user_roles')
-      .select('user_id')
-      .eq('user_id', prestataireId)
-      .eq('role', 'prestataire')
-      .single()
-
-    if (!prestataireData) return
-
-    // Get prestataire name from auth.users metadata
-    const { data: userData } = await supabase.auth.admin?.getUserById?.(prestataireId) || { data: null }
+    // Get prestataire info from get_all_prestataires function
+    const { data: prestatairesData } = await supabase.rpc('get_all_prestataires')
+    const prestataireInfo = prestatairesData?.find((p: any) => p.user_id === prestataireId)
     
-    // Try to get name from user_settings or create conversation
-    const { data: settingsData } = await supabase
-      .from('user_settings')
-      .select('*')
-      .eq('user_id', prestataireId)
-      .single()
+    const prestataireName = prestataireInfo 
+      ? (prestataireInfo.company_name || `${prestataireInfo.first_name} ${prestataireInfo.last_name}`)
+      : 'Prestataire'
 
-    // Create or get conversation
+    // Try to create or get conversation via RPC
     const { data: convData, error: convError } = await supabase
       .rpc('get_or_create_conversation', {
         p_user_id: userId,
@@ -104,11 +93,13 @@ function MessagesContent() {
     if (convData && !convError) {
       await loadConversations(userId)
       setSelectedConversation(convData)
+      setNewConversationUser(null)
     } else {
-      // If RPC doesn't exist, set up new conversation UI
+      console.log('RPC error or not available, showing new conversation UI:', convError)
+      // If RPC doesn't exist or fails, set up new conversation UI
       setNewConversationUser({
         id: prestataireId,
-        name: 'Prestataire'
+        name: prestataireName
       })
     }
   }
@@ -288,6 +279,19 @@ function MessagesContent() {
 
                 {/* Messages */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                  {newConversationUser && messages.length === 0 && (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center">
+                        <div className="w-16 h-16 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                          <svg className="w-8 h-8 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                          </svg>
+                        </div>
+                        <p className="text-neutral-600 font-medium mb-1">Démarrer une conversation</p>
+                        <p className="text-neutral-500 text-sm">Envoyez un message à {newConversationUser.name}</p>
+                      </div>
+                    </div>
+                  )}
                   {messages.map((message) => (
                     <div
                       key={message.id}
