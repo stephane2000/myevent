@@ -175,8 +175,7 @@ export default function PrestatairesPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredPrestataires.map((prestataire) => {
               const fullName = `${prestataire.first_name} ${prestataire.last_name}`.trim()
-              const displayName = fullName || prestataire.company_name || 'Prestataire'
-              const showCompanyName = prestataire.company_name && fullName && prestataire.company_name !== fullName
+              const displayName = fullName || 'Prestataire'
               
               return (
               <div
@@ -192,9 +191,6 @@ export default function PrestatairesPage() {
                     <h3 className="font-semibold text-neutral-900">
                       {displayName}
                     </h3>
-                    {showCompanyName && (
-                      <p className="text-sm text-neutral-600">{prestataire.company_name}</p>
-                    )}
                     {prestataire.service_category && (
                       <p className="text-sm text-neutral-500">{prestataire.service_category}</p>
                     )}
