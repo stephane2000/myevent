@@ -22,10 +22,15 @@ BEGIN
     (au.raw_user_meta_data->>'company_name')::text as company_name,
     -- Gérer à la fois l'ancien format (string) et le nouveau (array)
     CASE
+      -- Nouveau format : array JSON
       WHEN au.raw_user_meta_data->'service_categories' IS NOT NULL
+           AND jsonb_typeof(au.raw_user_meta_data->'service_categories') = 'array'
       THEN ARRAY(SELECT jsonb_array_elements_text(au.raw_user_meta_data->'service_categories'))
+      -- Ancien format : string simple
       WHEN au.raw_user_meta_data->>'service_category' IS NOT NULL
+           AND au.raw_user_meta_data->>'service_category' != ''
       THEN ARRAY[au.raw_user_meta_data->>'service_category']
+      -- Cas par défaut : array vide
       ELSE ARRAY[]::text[]
     END as service_categories,
     us.city::text,
