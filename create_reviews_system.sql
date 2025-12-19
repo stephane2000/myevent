@@ -45,6 +45,7 @@ CREATE POLICY "Users can delete their own reviews" ON public.prestataire_reviews
   FOR DELETE USING (auth.uid() = client_id);
 
 -- Fonction pour récupérer les avis d'un prestataire
+DROP FUNCTION IF EXISTS public.get_prestataire_reviews(uuid, integer, integer);
 CREATE OR REPLACE FUNCTION public.get_prestataire_reviews(
   p_user_id uuid,
   p_limit integer DEFAULT 10,
@@ -85,6 +86,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Fonction pour ajouter un avis
+DROP FUNCTION IF EXISTS public.add_review(uuid, integer, text, text);
 CREATE OR REPLACE FUNCTION public.add_review(
   p_prestataire_id uuid,
   p_rating integer,
@@ -122,6 +124,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Fonction pour mettre à jour les stats d'un prestataire
+DROP FUNCTION IF EXISTS public.update_prestataire_stats(uuid);
 CREATE OR REPLACE FUNCTION public.update_prestataire_stats(p_prestataire_id uuid)
 RETURNS void AS $$
 DECLARE
@@ -155,6 +158,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Fonction pour vérifier si un utilisateur a déjà laissé un avis
+DROP FUNCTION IF EXISTS public.has_user_reviewed(uuid);
 CREATE OR REPLACE FUNCTION public.has_user_reviewed(p_prestataire_id uuid)
 RETURNS boolean AS $$
 BEGIN
@@ -166,6 +170,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Fonction pour récupérer l'avis d'un utilisateur sur un prestataire
+DROP FUNCTION IF EXISTS public.get_user_review(uuid);
 CREATE OR REPLACE FUNCTION public.get_user_review(p_prestataire_id uuid)
 RETURNS TABLE (
   id uuid,

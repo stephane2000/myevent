@@ -10,7 +10,7 @@ interface Prestataire {
   first_name: string
   last_name: string
   company_name: string | null
-  service_category: string | null
+  service_categories: string[] | null
   city: string | null
   average_rating: number
   total_reviews: number
@@ -92,12 +92,12 @@ export default function PrestatairesPage() {
       !searchQuery ||
       (p.company_name?.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (`${p.first_name} ${p.last_name}`.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (p.service_category?.toLowerCase().includes(searchQuery.toLowerCase()))
+      (p.service_categories?.some(cat => cat.toLowerCase().includes(searchQuery.toLowerCase())))
 
     const matchesCategory =
       !selectedCategory ||
       selectedCategory === 'Tous' ||
-      p.service_category === selectedCategory
+      (p.service_categories?.includes(selectedCategory))
 
     return matchesSearch && matchesCategory
   })
@@ -191,8 +191,22 @@ export default function PrestatairesPage() {
                     <h3 className="font-semibold text-neutral-900">
                       {displayName}
                     </h3>
-                    {prestataire.service_category && (
-                      <p className="text-sm text-neutral-500">{prestataire.service_category}</p>
+                    {prestataire.service_categories && prestataire.service_categories.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {prestataire.service_categories.slice(0, 2).map((cat, index) => (
+                          <span
+                            key={index}
+                            className="text-xs px-2 py-0.5 bg-neutral-100 text-neutral-600 rounded-md"
+                          >
+                            {cat}
+                          </span>
+                        ))}
+                        {prestataire.service_categories.length > 2 && (
+                          <span className="text-xs px-2 py-0.5 bg-neutral-100 text-neutral-600 rounded-md">
+                            +{prestataire.service_categories.length - 2}
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>

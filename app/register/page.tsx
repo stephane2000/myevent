@@ -24,7 +24,7 @@ export default function Register() {
   
   // Étape 3 - Pour prestataires uniquement
   const [companyName, setCompanyName] = useState('')
-  const [serviceCategory, setServiceCategory] = useState('')
+  const [serviceCategories, setServiceCategories] = useState<string[]>([])
   const [description, setDescription] = useState('')
   
   const [loading, setLoading] = useState(false)
@@ -55,7 +55,7 @@ export default function Register() {
       return phone && address && city && postalCode
     }
     if (step === 3) {
-      return companyName && serviceCategory
+      return companyName && serviceCategories.length > 0
     }
     return true
   }
@@ -74,7 +74,7 @@ export default function Register() {
             last_name: lastName,
             role: userRole,
             company_name: userRole === 'prestataire' ? companyName : null,
-            service_category: userRole === 'prestataire' ? serviceCategory : null,
+            service_categories: userRole === 'prestataire' ? serviceCategories : null,
             description: userRole === 'prestataire' ? description : null,
           }
         }
@@ -371,19 +371,32 @@ export default function Register() {
               </div>
 
               <div>
-                <label htmlFor="category" className="block text-xs font-medium text-stone-500 mb-1.5 uppercase tracking-wide">Catégorie de service</label>
-                <select
-                  id="category"
-                  required
-                  value={serviceCategory}
-                  onChange={(e) => setServiceCategory(e.target.value)}
-                  className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent transition-all text-sm appearance-none cursor-pointer"
-                >
-                  <option value="">Sélectionnez une catégorie</option>
+                <label className="block text-xs font-medium text-stone-500 mb-1.5 uppercase tracking-wide">
+                  Catégories de services *
+                </label>
+                <div className="space-y-2 max-h-64 overflow-y-auto bg-stone-50 border border-stone-200 rounded-xl p-3">
                   {categories.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
+                    <label
+                      key={cat}
+                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-stone-100 cursor-pointer transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={serviceCategories.includes(cat)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setServiceCategories([...serviceCategories, cat])
+                          } else {
+                            setServiceCategories(serviceCategories.filter(c => c !== cat))
+                          }
+                        }}
+                        className="w-4 h-4 text-stone-900 border-stone-300 rounded focus:ring-stone-900 focus:ring-2"
+                      />
+                      <span className="text-sm text-stone-700">{cat}</span>
+                    </label>
                   ))}
-                </select>
+                </div>
+                <p className="text-xs text-stone-400 mt-1.5">Sélectionnez toutes les catégories qui correspondent à vos services</p>
               </div>
 
               <div>

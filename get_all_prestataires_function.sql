@@ -7,7 +7,7 @@ RETURNS TABLE (
   first_name text,
   last_name text,
   company_name text,
-  service_category text,
+  service_categories text[],
   city text,
   average_rating decimal,
   total_reviews integer,
@@ -20,7 +20,14 @@ BEGIN
     COALESCE(au.raw_user_meta_data->>'first_name', '') as first_name,
     COALESCE(au.raw_user_meta_data->>'last_name', '') as last_name,
     (au.raw_user_meta_data->>'company_name')::text as company_name,
-    (au.raw_user_meta_data->>'service_category')::text as service_category,
+    -- Gérer à la fois l'ancien format (string) et le nouveau (array)
+    CASE
+      WHEN au.raw_user_meta_data->'service_categories' IS NOT NULL
+      THEN ARRAY(SELECT jsonb_array_elements_text(au.raw_user_meta_data->'service_categories'))
+      WHEN au.raw_user_meta_data->>'service_category' IS NOT NULL
+      THEN ARRAY[au.raw_user_meta_data->>'service_category']
+      ELSE ARRAY[]::text[]
+    END as service_categories,
     us.city::text,
     COALESCE(ps.average_rating, 0) as average_rating,
     COALESCE(ps.total_reviews, 0) as total_reviews,
