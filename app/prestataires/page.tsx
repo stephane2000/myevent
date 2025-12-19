@@ -24,6 +24,9 @@ export default function PrestatairesPage() {
   const [selectedCategory, setSelectedCategory] = useState('')
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [isPrestataire, setIsPrestataire] = useState(false)
+  const [showCategoriesModal, setShowCategoriesModal] = useState(false)
+  const [selectedPrestataireCategories, setSelectedPrestataireCategories] = useState<string[]>([])
+  const [selectedPrestataireName, setSelectedPrestataireName] = useState('')
 
   const categories = [
     'Tous',
@@ -202,9 +205,16 @@ export default function PrestatairesPage() {
                           </span>
                         ))}
                         {prestataire.service_categories.length > 2 && (
-                          <span className="text-xs px-2 py-0.5 bg-neutral-100 text-neutral-600 rounded-md">
+                          <button
+                            onClick={() => {
+                              setSelectedPrestataireCategories(prestataire.service_categories || [])
+                              setSelectedPrestataireName(prestataire.company_name || displayName)
+                              setShowCategoriesModal(true)
+                            }}
+                            className="text-xs px-2 py-0.5 bg-neutral-900 text-white rounded-md hover:bg-neutral-800 transition-colors cursor-pointer"
+                          >
                             +{prestataire.service_categories.length - 2}
-                          </span>
+                          </button>
                         )}
                       </div>
                     )}
@@ -298,6 +308,58 @@ export default function PrestatairesPage() {
           </div>
         )}
       </main>
+
+      {/* Modal Catégories */}
+      {showCategoriesModal && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setShowCategoriesModal(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-neutral-900">
+                Services de {selectedPrestataireName}
+              </h3>
+              <button
+                onClick={() => setShowCategoriesModal(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-neutral-100 transition-colors"
+              >
+                <svg className="w-5 h-5 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Liste des catégories */}
+            <div className="space-y-2">
+              {selectedPrestataireCategories.map((cat, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-3 p-3 bg-neutral-50 rounded-xl border border-neutral-100 hover:bg-neutral-100 transition-colors"
+                >
+                  <div className="w-8 h-8 bg-neutral-900 rounded-lg flex items-center justify-center shrink-0">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className="text-sm font-medium text-neutral-800">{cat}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer */}
+            <div className="mt-6 pt-4 border-t border-neutral-100">
+              <p className="text-xs text-neutral-500 text-center">
+                {selectedPrestataireCategories.length} catégorie{selectedPrestataireCategories.length > 1 ? 's' : ''} de service
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
