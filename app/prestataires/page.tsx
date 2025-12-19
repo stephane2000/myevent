@@ -208,7 +208,7 @@ export default function PrestatairesPage() {
                           <button
                             onClick={() => {
                               setSelectedPrestataireCategories(prestataire.service_categories || [])
-                              setSelectedPrestataireName(prestataire.company_name || displayName)
+                              setSelectedPrestataireName(displayName)
                               setShowCategoriesModal(true)
                             }}
                             className="text-xs px-2 py-0.5 bg-neutral-900 text-white rounded-md hover:bg-neutral-800 transition-colors cursor-pointer"
