@@ -231,19 +231,17 @@ export default function PrestatairesPage() {
                 </div>
 
                 {/* Note et avis */}
-                {prestataire.total_reviews > 0 && (
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="flex gap-0.5">
-                      {renderStars(prestataire.average_rating)}
-                    </div>
-                    <span className="text-sm font-medium text-neutral-900">
-                      {prestataire.average_rating.toFixed(1)}
-                    </span>
-                    <span className="text-sm text-neutral-500">
-                      ({prestataire.total_reviews} avis)
-                    </span>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="flex gap-0.5">
+                    {renderStars(prestataire.average_rating)}
                   </div>
-                )}
+                  <span className="text-sm font-medium text-neutral-900">
+                    {prestataire.average_rating.toFixed(1)}
+                  </span>
+                  <span className="text-sm text-neutral-500">
+                    ({prestataire.total_reviews} avis)
+                  </span>
+                </div>
 
                 {/* Stats */}
                 <div className="flex items-center justify-between pt-4 pb-4 border-t border-neutral-100 mb-4">
